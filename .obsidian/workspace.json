@@ -185,6 +185,8 @@
   },
   "active": "bcda7ce0e0613a48",
   "lastOpenFiles": [
+    "README.md",
+    "frontend/package-lock.json",
     "frontend/node_modules/resolve/lib/sync.js",
     "frontend/node_modules/resolve/lib/normalize-options.js",
     "frontend/node_modules/resolve/lib/node-modules-paths.js",
@@ -194,8 +196,6 @@
     "frontend/node_modules/resolve/lib/core.js",
     "frontend/node_modules/resolve/lib/caller.js",
     "frontend/node_modules/resolve/lib/async.js",
-    "frontend/node_modules/resolve/lib",
-    "backend/uploads/exam_5_STUDENT_8.pdf",
     "frontend/node_modules/tailwindcss/src/postcss-plugins/nesting/README.md",
     "frontend/node_modules/tailwindcss/src/value-parser/README.md",
     "frontend/node_modules/axios/lib/core/README.md",
