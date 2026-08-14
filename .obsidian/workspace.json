@@ -1,0 +1,224 @@
+{
+  "main": {
+    "id": "93b06371d5c75dde",
+    "type": "split",
+    "children": [
+      {
+        "id": "a4b1b84fa3fb378a",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "bcda7ce0e0613a48",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "TEAM_PROMPTS.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "TEAM_PROMPTS"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "56c9cacb59d12cb5",
+    "type": "split",
+    "children": [
+      {
+        "id": "f0605835a590c058",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "1e6af2fb50876233",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "868f29e775a834fe",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "3b81eade8626134f",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "04ecc67e40238c31",
+    "type": "split",
+    "children": [
+      {
+        "id": "9186162a1d9aef6b",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "cc85ce54eb7ccf9f",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks"
+            }
+          },
+          {
+            "id": "5479c4fa45132927",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links"
+            }
+          },
+          {
+            "id": "18b813f5aa9566c1",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "cdc18e1f13a094e6",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "All properties"
+            }
+          },
+          {
+            "id": "d012ca427702cc9d",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "SRDD1.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Outline of SRDD1"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false,
+      "bases:Create new base": false
+    }
+  },
+  "active": "bcda7ce0e0613a48",
+  "lastOpenFiles": [
+    "frontend/node_modules/resolve/lib/sync.js",
+    "frontend/node_modules/resolve/lib/normalize-options.js",
+    "frontend/node_modules/resolve/lib/node-modules-paths.js",
+    "frontend/node_modules/resolve/lib/is-core.js",
+    "frontend/node_modules/resolve/lib/homedir.js",
+    "frontend/node_modules/resolve/lib/core.json",
+    "frontend/node_modules/resolve/lib/core.js",
+    "frontend/node_modules/resolve/lib/caller.js",
+    "frontend/node_modules/resolve/lib/async.js",
+    "frontend/node_modules/resolve/lib",
+    "backend/uploads/exam_5_STUDENT_8.pdf",
+    "frontend/node_modules/tailwindcss/src/postcss-plugins/nesting/README.md",
+    "frontend/node_modules/tailwindcss/src/value-parser/README.md",
+    "frontend/node_modules/axios/lib/core/README.md",
+    "frontend/node_modules/axios/lib/helpers/README.md",
+    "frontend/node_modules/axios/lib/env/README.md",
+    "frontend/node_modules/axios/lib/adapters/README.md",
+    "frontend/node_modules/tailwindcss/lib/postcss-plugins/nesting/README.md",
+    "frontend/node_modules/tailwindcss/lib/value-parser/README.md",
+    "backend/venv/Lib/site-packages/pip-26.2.1.dist-info/licenses/src/pip/_vendor/idna/LICENSE.md",
+    "backend/venv/Lib/site-packages/~ip-25.2.dist-info/licenses/src/pip/_vendor/idna/LICENSE.md",
+    "backend/venv/Lib/site-packages/pip-25.2.dist-info/licenses/src/pip/_vendor/idna/LICENSE.md",
+    "PROGRESS.md",
+    "SRDD_HACKATHON_FINAL.md",
+    "requirements_and_dependencies.md",
+    "README_HACKATHON.md",
+    "QUICK_START_AND_TROUBLESHOOTING.md",
+    "FOR_TEAM_LEAD.md",
+    "env_templates.md",
+    "DEVELOPMENT_PLAN.md",
+    "00_START_HERE.md",
+    "SRDD_1.md",
+    "SRDD_0.md",
+    "SRDD.md",
+    "SRDD1.md"
+  ]
+}
