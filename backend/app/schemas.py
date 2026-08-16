@@ -6,16 +6,19 @@ from datetime import datetime
 
 # --- Exam Schemas ---
 class ExamCreateRequest(BaseModel):
-    exam_name: str = Field(..., example="Physics Midterm")
-    subject: str = Field(..., example="Physics")
-    exam_structure: List[Dict[str, Any]] = Field(default=[], example=[
-        {
-            "part": "A",
-            "num_questions": 2,
-            "marks_per_question": 2,
-            "compulsory": True
-        }
-    ])
+    exam_name: str = Field(..., examples=["Physics Midterm"])
+    subject: str = Field(..., examples=["Physics"])
+    exam_structure: List[Dict[str, Any]] = Field(
+        default=[],
+        examples=[[
+            {
+                "part": "A",
+                "num_questions": 2,
+                "marks_per_question": 2,
+                "compulsory": True
+            }
+        ]]
+    )
 
 class ExamResponse(BaseModel):
     id: int
