@@ -67,18 +67,18 @@ def get_student_exam_report(roll_no: str, exam_id: int, db: Session = Depends(ge
         models.FinalResult.roll_no.ilike(roll_clean)
     ).first()
 
-    total_marks = result.total_marks if result else sum(e.marks_awarded for e in evaluations)
+    total_marks = float(result.total_marks) if result else sum(float(e.marks_awarded or 0.0) for e in evaluations)
 
     question_details = []
     for ev in evaluations:
         hitl = ev.hitl_review
         question_details.append(schemas.StudentQuestionDetail(
             evaluation_id=ev.id,
-            question_id=ev.question_id,
-            max_marks=ev.max_marks,
-            marks_awarded=ev.marks_awarded,
-            ocr_text_preview=ev.ocr_text_preview,
-            ai_reasoning=ev.ai_reasoning,
+            question_id=str(ev.question_id),
+            max_marks=float(ev.max_marks or 1.0),
+            marks_awarded=float(ev.marks_awarded or 0.0),
+            ocr_text_preview=ev.ocr_text_preview or "",
+            ai_reasoning=ev.ai_reasoning or "",
             teacher_feedback=hitl.teacher_feedback if hitl else None,
             recheck_requested=bool(ev.recheck_requested),
             recheck_comment=ev.recheck_comment,
@@ -91,7 +91,7 @@ def get_student_exam_report(roll_no: str, exam_id: int, db: Session = Depends(ge
         subject=exam.subject,
         roll_no=roll_clean,
         total_marks=total_marks,
-        max_total_marks=float(exam.total_marks),
+        max_total_marks=float(exam.total_marks or 50.0),
         pdf_download_url=f"/exam/{exam_id}/download-pdf/{roll_clean}",
         questions=question_details
     )

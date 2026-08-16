@@ -2,7 +2,7 @@ import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
-from app.database import engine, Base
+from app.database import engine, Base, apply_migrations
 from app.routes import auth, student, exams, rubrics, uploads, hitl, outputs
 from app.routes.auth import seed_sample_credentials
 
@@ -13,10 +13,11 @@ logging.basicConfig(
 )
 logger = logging.getLogger("exam_grading")
 
-# Create database tables automatically if they don't exist
+# Create database tables automatically if they don't exist & apply migrations
 try:
     Base.metadata.create_all(bind=engine)
-    logger.info("Database tables verified/created successfully.")
+    apply_migrations()
+    logger.info("Database tables verified & migrated successfully.")
     seed_sample_credentials()
     logger.info("Sample credentials seeded successfully.")
 except Exception as e:
