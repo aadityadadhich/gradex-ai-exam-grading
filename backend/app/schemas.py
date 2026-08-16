@@ -31,7 +31,8 @@ class ExamResponse(BaseModel):
     class Config:
         from_attributes = True
 
-# --- Rubric Schemas ---
+    model_config = ConfigDict(from_attributes=True)
+
 class RubricSaveRequest(BaseModel):
     rubric_data: Dict[str, Any]
 
