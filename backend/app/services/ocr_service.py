@@ -8,25 +8,28 @@ logger = logging.getLogger(__name__)
 
 class OCRService:
     def __init__(self):
-        self._ocr = None
+        self._reader = None
         self._initialized = False
 
     def _init_ocr(self):
         if self._initialized:
             return
         try:
-            from paddleocr import PaddleOCR
-            self._ocr = PaddleOCR(use_angle_cls=True, lang='en', show_log=False)
+            import torch
+            import easyocr
+            use_gpu = torch.cuda.is_available()
+            self._reader = easyocr.Reader(['en'], gpu=use_gpu, verbose=False)
             self._initialized = True
-            logger.info("PaddleOCR initialized successfully.")
+            logger.info(f"EasyOCR initialized successfully (GPU: {use_gpu}).")
         except Exception as e:
-            logger.warning(f"PaddleOCR not available or failed to load ({e}). Using PyMuPDF text & image parsing.")
-            self._ocr = None
+            logger.warning(f"EasyOCR not available ({e}). Using PyMuPDF direct text parsing.")
+            self._reader = None
             self._initialized = True
 
     def extract_text_from_pdf(self, pdf_path: str) -> Dict[str, Any]:
         """
-        Extract text and layout from multi-page PDF using PyMuPDF (fitz) + PaddleOCR.
+        Extract text from PDF pages.
+        Supports both direct text extraction (typed PDFs) and EasyOCR (scanned handwritten image PDFs).
         """
         self._init_ocr()
         pages_result = []
@@ -39,10 +42,10 @@ class OCRService:
             for idx, page in enumerate(doc):
                 page_num = idx + 1
                 
-                # 1. Extract direct text (for digital/typed PDFs)
+                # 1. Check direct PDF text
                 direct_text = page.get_text() or ""
                 
-                # 2. Render page image for OCR (for handwritten/scanned PDFs)
+                # 2. Render page image for OCR
                 pix = page.get_pixmap(dpi=150)
                 img_pil = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
                 img_np = np.array(img_pil)
@@ -50,31 +53,25 @@ class OCRService:
                 ocr_text = ""
                 ocr_confidence = 0.85
 
-                if self._ocr:
+                if self._reader and len(direct_text.strip()) < 10:
                     try:
-                        ocr_res = self._ocr.ocr(img_np, cls=True)
+                        results = self._reader.readtext(img_np)
                         lines = []
                         confidences = []
-                        if ocr_res and ocr_res[0]:
-                            for line in ocr_res[0]:
-                                text = line[1][0]
-                                conf = line[1][1]
-                                lines.append(text)
-                                confidences.append(conf)
+                        for bbox, text, conf in results:
+                            lines.append(text.strip())
+                            confidences.append(float(conf))
 
                         ocr_text = "\n".join(lines)
                         if confidences:
                             ocr_confidence = float(np.mean(confidences))
                     except Exception as ex:
-                        logger.warning(f"PaddleOCR process error on page {page_num}: {ex}")
+                        logger.warning(f"EasyOCR process error on page {page_num}: {ex}")
 
-                # Combine direct PDF text and OCR text intelligently
-                combined_text = direct_text.strip()
-                if not combined_text or len(ocr_text) > len(combined_text):
-                    combined_text = ocr_text.strip() if ocr_text.strip() else combined_text
-
+                # Choose best text source
+                combined_text = ocr_text.strip() if len(ocr_text.strip()) > len(direct_text.strip()) else direct_text.strip()
                 if not combined_text:
-                    combined_text = f"Content extracted from PDF page {page_num} in {os.path.basename(pdf_path)}"
+                    combined_text = direct_text.strip()
 
                 has_diagram = self._detect_diagram(img_np)
 
@@ -90,7 +87,7 @@ class OCRService:
             return {"pages": pages_result}
 
         except Exception as e:
-            logger.error(f"PyMuPDF processing error on {pdf_path}: {e}. Falling back to PyPDF.")
+            logger.error(f"PyMuPDF/OCR processing error on {pdf_path}: {e}. Falling back to PyPDF.")
             return self._fallback_pypdf(pdf_path)
 
     def _fallback_pypdf(self, pdf_path: str) -> Dict[str, Any]:
@@ -103,7 +100,7 @@ class OCRService:
                 txt = page.extract_text() or ""
                 pages.append({
                     "page_num": idx + 1,
-                    "text": txt if txt.strip() else f"Document text extracted from page {idx + 1}.",
+                    "text": txt if txt.strip() else "",
                     "confidence": 0.8,
                     "has_diagram": False,
                     "diagram_regions": []
@@ -112,17 +109,7 @@ class OCRService:
         except Exception as ex:
             logger.warning(f"pypdf fallback error: {ex}")
 
-        return {
-            "pages": [
-                {
-                    "page_num": 1,
-                    "text": f"Document content from {os.path.basename(pdf_path)}",
-                    "confidence": 0.8,
-                    "has_diagram": False,
-                    "diagram_regions": []
-                }
-            ]
-        }
+        return {"pages": []}
 
     def _detect_diagram(self, img_array) -> bool:
         """Edge detection heuristic using OpenCV"""

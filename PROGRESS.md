@@ -1,7 +1,7 @@
 # 📊 Project Progress & Handoff Tracking
 
 > **Project:** Gradex AI Academic Exam Assessment Platform  
-> **Status:** Formal University UI & Local Ollama (Qwen 2.5 7B) Integrated & Live  
+> **Status:** All MCQ & Subjective Evaluation Fixes, OCR Pipeline, and PDF Grade Sheet Downloads Tested & Verified  
 > **Last Updated:** 2026-08-17  
 
 ---
@@ -11,28 +11,18 @@ This file maintains the exact state of implementation so that work can be resume
 
 ---
 
-## 🏁 New Upgrades & Features Matrix
+## 🏁 Solved Issues Matrix
 
-- [x] **1. Local Ollama Integration (`qwen2.5:7b`)**:
-  - Configured `OLLAMA_BASE_URL=http://localhost:11434` and `OLLAMA_MODEL=qwen2.5:7b` in `config.py` and `llm_service.py`.
-  - Offline, high-speed inference on RTX 4060 GPU (~60 tokens/sec) with zero quota limits.
-  - Multi-tier fallback (Ollama Qwen 2.5 &rarr; Gemini API &rarr; Offline structured parser).
-- [x] **2. Formal University & Academic UI Redesign**:
-  - Modern academic styling with Oxford Blue / Navy palette (`#0F172A`, `#1E3A8A`, `#2563EB`), subtle borders (`#E2E8F0`), and clean typography.
-  - Replaced high-contrast brutalist styling with official university cards, institutional navigation bars, structured examination gradebooks, and clear status pills.
-- [x] **3. Role-Based Portals**:
-  - **Faculty Console**: Exam Configuration, Rubric Builder, Bulk Script Ingestion, Automated Assessment Pipeline, Faculty Moderation (HITL with Student Rechecks), and Master Gradebook CSV/PDF exports.
-  - **Candidate / Student Portal**: Evaluated Response Sheets, Side-by-Side Question Assessment View, Official Grade Sheet PDF download, and interactive Recheck Request submission.
-- [x] **4. Active Servers**:
-  - React Frontend (Academic UI): `http://localhost:3000` (Task ID `task-538`)
-  - FastAPI Backend API: `http://127.0.0.1:8000` (Task ID `task-642`)
-- [x] **5. GitHub Repository**: Synced to `https://github.com/aadityadadhich/gradex-ai-exam-grading.git`.
-
----
-
-## 📝 Activity Log
-
-### [2026-08-17] Integrated Local Ollama (Qwen 2.5 7B) & University Design System
-- Updated `llm_service.py` with native Ollama endpoint integration.
-- Redesigned all frontend components (`Login.jsx`, `Header.jsx`, `StudentDashboard.jsx`, `ExamSetup.jsx`, `RubricBot.jsx`, `PDFUpload.jsx`, `ProcessingView.jsx`, `HitlDashboard.jsx`, `ResultsViewer.jsx`, `App.jsx`, `index.css`) to formal university standards.
-- Verified live server health checks with HTTP 200 OK.
+- [x] **1. Installed & Verified EasyOCR Engine**:
+  - Scanned image-based PDFs from test data (`Student_1.pdf` through `Student_37.pdf`) had 0 digital text layer; installed EasyOCR with PyTorch to extract handwriting across all pages.
+- [x] **2. Fixed Question-by-Question MCQ Extraction & Grading**:
+  - Built `parse_all_student_mcqs` in `evaluation_service.py` to extract option choices (A/B/C/D) from sequential lines, handling multi-line splits (`Q.2 \n C`), OCR digit variations, and comparing against the official answer key.
+- [x] **3. Fixed Grade Report PDF Downloads for Faculty & Students**:
+  - Corrected case-sensitive database lookups in `outputs.py` using `models.StudentSubmission.roll_no.ilike(clean_roll)`.
+  - Verified `GET /exam/{id}/download-pdf/Student_1` and `GET /exam/{id}/download-pdf/Student_17` return complete PDFs with HTTP 200 OK.
+- [x] **4. End-to-End AI Pipeline Tested**:
+  - Tested end-to-end evaluation on `Student_1.pdf` matching all 20 MCQs and 15 Short Answer questions.
+- [x] **5. Active Background Servers**:
+  - React Frontend: `http://localhost:3000` (Task ID `task-538`)
+  - FastAPI Backend: `http://127.0.0.1:8000` (Task ID `task-971`)
+- [x] **6. GitHub Repository**: Synced to `https://github.com/aadityadadhich/gradex-ai-exam-grading.git`.

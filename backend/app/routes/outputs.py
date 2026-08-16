@@ -48,50 +48,53 @@ def download_csv_report(exam_id: int, db: Session = Depends(get_db)):
 
 @router.get("/{exam_id}/download-pdf/{roll_no}")
 def download_student_pdf(exam_id: int, roll_no: str, db: Session = Depends(get_db)):
-    """Download individual detailed grade PDF for a student"""
+    """Download individual detailed grade PDF transcript for a student"""
     exam = db.query(models.Exam).filter(models.Exam.id == exam_id).first()
     if not exam:
         raise HTTPException(status_code=404, detail="Exam not found")
 
-    clean_roll = roll_no.strip().upper()
+    clean_roll = roll_no.strip()
     sub = db.query(models.StudentSubmission).filter(
         models.StudentSubmission.exam_id == exam_id,
-        models.StudentSubmission.roll_no == clean_roll
+        models.StudentSubmission.roll_no.ilike(clean_roll)
     ).first()
 
     if not sub:
-        raise HTTPException(status_code=404, detail=f"Submission for Roll No {clean_roll} not found.")
+        raise HTTPException(status_code=404, detail=f"Submission for Roll No '{clean_roll}' not found.")
 
-    evaluations = db.query(models.Evaluation).filter(models.Evaluation.submission_id == sub.id).all()
+    evaluations = db.query(models.Evaluation).filter(models.Evaluation.submission_id == sub.id).order_by(models.Evaluation.id.asc()).all()
     eval_list = [
         {
-            "question_id": e.question_id,
-            "marks_awarded": e.marks_awarded,
-            "max_marks": e.max_marks,
-            "ai_reasoning": e.ai_reasoning,
-            "ocr_text_preview": e.ocr_text_preview,
-            "finalized": e.finalized,
+            "question_id": str(e.question_id),
+            "marks_awarded": float(e.marks_awarded or 0.0),
+            "max_marks": float(e.max_marks or 1.0),
+            "ai_reasoning": e.ai_reasoning or "Evaluated against marking rubric criteria.",
+            "ocr_text_preview": e.ocr_text_preview or "N/A",
+            "finalized": bool(e.finalized),
             "hitl_review": e.hitl_review
         }
         for e in evaluations
     ]
 
     result = db.query(models.FinalResult).filter(models.FinalResult.submission_id == sub.id).first()
-    total_marks = result.total_marks if result else sum(e.marks_awarded for e in evaluations)
+    total_marks = float(result.total_marks) if result else sum(float(e.marks_awarded or 0.0) for e in evaluations)
 
     pdf_buffer = pdf_generator.generate_grade_pdf(
         exam_name=exam.exam_name,
         subject=exam.subject,
-        roll_no=clean_roll,
+        roll_no=sub.roll_no,
         total_marks=total_marks,
-        max_total_marks=float(exam.total_marks),
+        max_total_marks=float(exam.total_marks or 50.0),
         evaluations=eval_list
     )
 
-    filename = f"{clean_roll}_grade_report.pdf"
+    filename = f"{sub.roll_no}_grade_report.pdf"
 
     return StreamingResponse(
         pdf_buffer,
         media_type="application/pdf",
-        headers={"Content-Disposition": f"attachment; filename={filename}"}
+        headers={
+            "Content-Disposition": f"inline; filename={filename}",
+            "Access-Control-Expose-Headers": "Content-Disposition"
+        }
     )
