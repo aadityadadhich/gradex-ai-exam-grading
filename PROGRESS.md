@@ -1,8 +1,8 @@
 # 📊 Project Progress & Handoff Tracking
 
-> **Project:** AI-Powered Subjective Exam Grading System (Gradex AI)  
-> **Status:** New Updates Complete & Live — Student & Teacher Portals, Semantic Grading, Bulk Upload, HITL Rechecks  
-> **Last Updated:** 2026-08-16  
+> **Project:** Gradex AI Academic Exam Assessment Platform  
+> **Status:** Formal University UI & Local Ollama (Qwen 2.5 7B) Integrated & Live  
+> **Last Updated:** 2026-08-17  
 
 ---
 
@@ -11,38 +11,28 @@ This file maintains the exact state of implementation so that work can be resume
 
 ---
 
-## 🏁 New Updates Implementation Matrix (from `new-updates.txt`)
+## 🏁 New Upgrades & Features Matrix
 
-- [x] **1. Removed Mistral API (Gemini API Only)**: Removed Mistral API usages in `llm_service.py` and configured multi-model Gemini fallback (`gemini-2.5-flash`, `gemini-flash-latest`, `gemini-1.5-flash`).
-- [x] **2. Removed Double-Blind / Anonymization**: Removed anonymization overhead; directly linked Student Roll Numbers (`Student_1` ... `Student_37`) and Teacher Employee IDs (`Teacher_1`, `Teacher_2`).
-- [x] **3. Role-Based Login (Student & Teacher)**:
-  - Created `Login.jsx` component with Student & Teacher role toggles.
-  - Seeded 37 Student accounts (`Student_1` to `Student_37` / `password123`) and 2 Teacher accounts (`Teacher_1`, `Teacher_2` / `teacher123`).
-  - Generated and saved `credentials.txt` in workspace root.
-- [x] **4. Student Portal (`StudentDashboard.jsx`)**:
-  - Displays only the student's evaluated papers and marks.
-  - Question-by-question breakdown with **side-by-side view** (Original student OCR text on left, AI Reasoning + Reference Solution + Teacher Feedback on right).
-  - **Raise Recheck Request**: Interactive modal allowing students to flag questions, submit explanation comments, and track recheck status.
-- [x] **5. Teacher Portal & Exam Management**:
-  - Create new exams, delete existing exams with confirmation (`DELETE /exam/{id}`).
-  - Bulk upload student PDFs with automatic Roll Number detection from filenames (e.g. `Student_1.pdf` &rarr; `Student_1`).
-  - Run AI pipeline with real-time progress bar.
-  - HITL Review queue prioritizing Student Recheck Requests with student comments highlighted.
-- [x] **6. Simplified Semantic Evaluation Process**:
-  - Replaced rigid keyword matching with Gemini semantic evaluation + tolerance threshold (70% threshold).
-  - Accurate MCQ matching (Options A/B/C/D).
-- [x] **7. Active Servers**:
-  - React Frontend (Neubrutalism UI): `http://localhost:3000` (Task ID `task-538`)
-  - FastAPI Backend API: `http://127.0.0.1:8000` (Task ID `task-536`)
+- [x] **1. Local Ollama Integration (`qwen2.5:7b`)**:
+  - Configured `OLLAMA_BASE_URL=http://localhost:11434` and `OLLAMA_MODEL=qwen2.5:7b` in `config.py` and `llm_service.py`.
+  - Offline, high-speed inference on RTX 4060 GPU (~60 tokens/sec) with zero quota limits.
+  - Multi-tier fallback (Ollama Qwen 2.5 &rarr; Gemini API &rarr; Offline structured parser).
+- [x] **2. Formal University & Academic UI Redesign**:
+  - Modern academic styling with Oxford Blue / Navy palette (`#0F172A`, `#1E3A8A`, `#2563EB`), subtle borders (`#E2E8F0`), and clean typography.
+  - Replaced high-contrast brutalist styling with official university cards, institutional navigation bars, structured examination gradebooks, and clear status pills.
+- [x] **3. Role-Based Portals**:
+  - **Faculty Console**: Exam Configuration, Rubric Builder, Bulk Script Ingestion, Automated Assessment Pipeline, Faculty Moderation (HITL with Student Rechecks), and Master Gradebook CSV/PDF exports.
+  - **Candidate / Student Portal**: Evaluated Response Sheets, Side-by-Side Question Assessment View, Official Grade Sheet PDF download, and interactive Recheck Request submission.
+- [x] **4. Active Servers**:
+  - React Frontend (Academic UI): `http://localhost:3000` (Task ID `task-538`)
+  - FastAPI Backend API: `http://127.0.0.1:8000` (Task ID `task-642`)
+- [x] **5. GitHub Repository**: Synced to `https://github.com/aadityadadhich/gradex-ai-exam-grading.git`.
 
 ---
 
 ## 📝 Activity Log
 
-### [2026-08-16] Implemented all requirements from `new-updates.txt`
-- Created `auth.py` and `student.py` routes.
-- Built `Login.jsx` and `StudentDashboard.jsx`.
-- Added bulk PDF upload (`POST /exam/{id}/bulk-submit-pdfs`).
-- Added exam deletion endpoint (`DELETE /exam/{id}`).
-- Created `credentials.txt` containing login credentials for all 37 test students and teachers.
-- Verified live server operations on both `localhost:3000` and `localhost:8000`.
+### [2026-08-17] Integrated Local Ollama (Qwen 2.5 7B) & University Design System
+- Updated `llm_service.py` with native Ollama endpoint integration.
+- Redesigned all frontend components (`Login.jsx`, `Header.jsx`, `StudentDashboard.jsx`, `ExamSetup.jsx`, `RubricBot.jsx`, `PDFUpload.jsx`, `ProcessingView.jsx`, `HitlDashboard.jsx`, `ResultsViewer.jsx`, `App.jsx`, `index.css`) to formal university standards.
+- Verified live server health checks with HTTP 200 OK.

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Header from './components/Header';
 import Login from './components/Login';
 import StudentDashboard from './components/StudentDashboard';
@@ -43,8 +43,8 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F8FAF9] text-slate-900 font-sans selection:bg-yellow-300">
-      {/* Top Header & Navigation */}
+    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 font-sans antialiased">
+      {/* Top University Navigation Header */}
       <Header 
         activeTab={activeTab} 
         setActiveTab={setActiveTab} 
@@ -54,14 +54,14 @@ export default function App() {
       />
 
       {/* Main Interactive Work Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
         
-        {/* Student View */}
+        {/* Candidate / Student Portal */}
         {user.role === 'STUDENT' && (
           <StudentDashboard user={user} />
         )}
 
-        {/* Teacher View */}
+        {/* Faculty / Examiner Workspace */}
         {user.role === 'TEACHER' && (
           <>
             {activeTab === 'setup' && (
@@ -109,9 +109,9 @@ export default function App() {
         )}
       </main>
 
-      {/* Footer */}
-      <footer className="border-t-4 border-slate-900 bg-white py-6 text-center text-xs font-black text-slate-900">
-        <p>Gradex AI — Subjective Exam Evaluation & Grading Platform</p>
+      {/* Institutional Footer */}
+      <footer className="border-t border-slate-200 bg-white py-4 text-center text-xs text-slate-500 font-medium">
+        <p>Gradex Academic Assessment Authority • Automated Examination & Evaluation Infrastructure</p>
       </footer>
     </div>
   );

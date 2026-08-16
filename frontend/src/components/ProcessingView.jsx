@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../api/client';
-import { PlayCircle, CheckCircle2, Bot, ScanText, Calculator, ArrowRight, ShieldCheck, AlertCircle, Loader2 } from 'lucide-react';
+import { PlayCircle, CheckCircle2, Bot, ScanText, Calculator, ArrowRight, ShieldCheck, AlertCircle, Loader2, Cpu, FileCheck } from 'lucide-react';
 
 export default function ProcessingView({ activeExam, onComplete }) {
   const [processing, setProcessing] = useState(false);
@@ -27,11 +27,11 @@ export default function ProcessingView({ activeExam, onComplete }) {
             clearInterval(intervalId);
           } else if (res.data.status === 'error') {
             setProcessing(false);
-            setErrorMsg(res.data.error_details || 'Batch processing encountered an error.');
+            setErrorMsg(res.data.error_details || 'Batch assessment pipeline encountered an issue.');
             clearInterval(intervalId);
           }
         } catch (err) {
-          console.error('Error fetching progress:', err);
+          console.error('Error polling progress:', err);
         }
       }, 1500);
     }
@@ -47,14 +47,14 @@ export default function ProcessingView({ activeExam, onComplete }) {
       percent_complete: 0.0,
       processed_submissions: 0,
       total_submissions: 0,
-      current_roll_no: 'Starting...',
+      current_roll_no: 'Initiating...',
       status: 'processing'
     });
 
     try {
       await api.processExam(activeExam.id);
     } catch (err) {
-      setErrorMsg('Processing failed to launch: ' + (err.response?.data?.detail || err.message));
+      setErrorMsg('Pipeline execution failed to start: ' + (err.response?.data?.detail || err.message));
       setProcessing(false);
     }
   };
@@ -64,111 +64,110 @@ export default function ProcessingView({ activeExam, onComplete }) {
   const pct = Math.min(Math.max(progressData.percent_complete || 0, 0), 100);
 
   return (
-    <div className="space-y-8 animate-fade-in">
-      <div className="neo-box p-8 space-y-6">
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b-2 border-slate-900 pb-4">
+    <div className="space-y-6 animate-fade-in">
+      <div className="academic-card p-6 bg-white space-y-6">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-slate-100 pb-4">
           <div>
-            <h2 className="text-2xl font-black text-slate-900 flex items-center gap-3">
-              <PlayCircle className="w-7 h-7 text-slate-900" />
-              Automated AI Pipeline Execution
+            <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2.5">
+              <PlayCircle className="w-5 h-5 text-blue-600" />
+              Automated Examination Assessment Engine
             </h2>
-            <p className="text-xs text-slate-600 font-semibold mt-1">
-              Trigger background evaluation for exam: <b className="text-slate-900">{activeExam.exam_name}</b>
+            <p className="text-xs text-slate-500 font-medium mt-0.5">
+              Execute local AI evaluation pipeline (Qwen 2.5 7B via Ollama / Gemini fallback) for course: <b className="text-slate-800">{activeExam.exam_name}</b>
             </p>
           </div>
 
           <button
             onClick={handleStartProcessing}
             disabled={processing}
-            className="neo-button-primary px-6 py-3 flex items-center gap-2 text-sm cursor-pointer disabled:opacity-50"
+            className="academic-button-primary px-5 py-2.5 flex items-center gap-2 text-xs font-semibold cursor-pointer disabled:opacity-50"
           >
-            {processing ? <Loader2 className="w-5 h-5 animate-spin" /> : <PlayCircle className="w-5 h-5" />}
-            {processing ? 'Pipeline Executing...' : 'Start AI Batch Grading'}
+            {processing ? <Loader2 className="w-4 h-4 animate-spin" /> : <PlayCircle className="w-4 h-4" />}
+            {processing ? 'Assessment in Progress...' : 'Start Automated Assessment'}
           </button>
         </div>
 
         {/* Error Notification */}
         {errorMsg && (
-          <div className="bg-rose-200 border-2 border-slate-900 rounded-xl p-4 flex items-center gap-3 text-xs font-bold text-slate-900 neo-badge">
-            <AlertCircle className="w-5 h-5 text-rose-700 flex-shrink-0" />
+          <div className="academic-badge badge-rose p-3 rounded-lg flex items-center gap-2 w-full text-xs">
+            <AlertCircle className="w-4 h-4 text-rose-700 flex-shrink-0" />
             <span>{errorMsg}</span>
           </div>
         )}
 
         {/* Real-time Progress Bar & Status */}
         {(processing || completed || pct > 0) && (
-          <div className="bg-yellow-100 border-2 border-slate-900 rounded-xl p-6 space-y-4 shadow-[4px_4px_0px_0px_rgba(15,23,42,1)]">
-            <div className="flex items-center justify-between text-xs font-black text-slate-900">
+          <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 space-y-3">
+            <div className="flex items-center justify-between text-xs font-semibold text-slate-800">
               <span className="flex items-center gap-2">
-                {processing && <Loader2 className="w-4 h-4 animate-spin text-purple-700" />}
-                {completed ? '✓ Batch Evaluation Complete!' : `Checking Copy ${progressData.processed_submissions} of ${progressData.total_submissions} (Roll No: ${progressData.current_roll_no})`}
+                {processing && <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-600" />}
+                {completed ? '✓ Batch Examination Evaluation Complete' : `Evaluating Candidate Script ${progressData.processed_submissions} of ${progressData.total_submissions} (Roll No: ${progressData.current_roll_no})`}
               </span>
-              <span className="text-base font-black bg-white px-3 py-1 border-2 border-slate-900 rounded-lg">
+              <span className="font-mono font-bold text-slate-900 text-sm">
                 {pct}%
               </span>
             </div>
 
-            {/* Outer Progress Bar Track */}
-            <div className="w-full bg-white border-2 border-slate-900 rounded-xl h-6 p-0.5 overflow-hidden shadow-[2px_2px_0px_0px_rgba(15,23,42,1)]">
-              {/* Inner Filled Progress Bar */}
+            {/* Progress Bar Track */}
+            <div className="w-full bg-slate-200 rounded-full h-3 overflow-hidden">
               <div
-                className="bg-emerald-400 border-r-2 border-slate-900 h-full rounded-lg transition-all duration-500 ease-out"
+                className="bg-blue-600 h-full rounded-full transition-all duration-500 ease-out"
                 style={{ width: `${pct}%` }}
               />
             </div>
           </div>
         )}
 
-        {/* Pipeline Execution Flow Visualizer */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
-          <div className="bg-purple-100 border-2 border-slate-900 rounded-xl p-5 space-y-2 shadow-[3px_3px_0px_0px_rgba(15,23,42,1)]">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-white border-2 border-slate-900 flex items-center justify-center font-bold">
-                <ScanText className="w-4 h-4" />
-              </div>
-              <h4 className="font-extrabold text-slate-900 text-sm">1. PyMuPDF + PaddleOCR Layout</h4>
+        {/* Pipeline Architecture Visualizer */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3.5 pt-1">
+          <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-1.5">
+            <div className="flex items-center gap-2 text-xs font-bold text-slate-900">
+              <ScanText className="w-4 h-4 text-blue-600" />
+              <span>1. PyMuPDF & OCR</span>
             </div>
-            <p className="text-xs text-slate-700 font-medium pl-11">Extracts handwritten text and detects diagram bounding boxes.</p>
+            <p className="text-[11px] text-slate-500 leading-relaxed">
+              Extracts high-resolution handwriting and diagram layout regions.
+            </p>
           </div>
 
-          <div className="bg-cyan-100 border-2 border-slate-900 rounded-xl p-5 space-y-2 shadow-[3px_3px_0px_0px_rgba(15,23,42,1)]">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-white border-2 border-slate-900 flex items-center justify-center font-bold">
-                <Bot className="w-4 h-4" />
-              </div>
-              <h4 className="font-extrabold text-slate-900 text-sm">2. Multi-Provider AI (Gemini / Mistral)</h4>
+          <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-1.5">
+            <div className="flex items-center gap-2 text-xs font-bold text-slate-900">
+              <Cpu className="w-4 h-4 text-blue-600" />
+              <span>2. Local Qwen 2.5 (Ollama)</span>
             </div>
-            <p className="text-xs text-slate-700 font-medium pl-11">Parses core technical concepts, ignoring handwriting variations.</p>
+            <p className="text-[11px] text-slate-500 leading-relaxed">
+              Processes semantic meaning & technical criteria offline with 0 token limits.
+            </p>
           </div>
 
-          <div className="bg-emerald-100 border-2 border-slate-900 rounded-xl p-5 space-y-2 shadow-[3px_3px_0px_0px_rgba(15,23,42,1)]">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-white border-2 border-slate-900 flex items-center justify-center font-bold">
-                <Calculator className="w-4 h-4" />
-              </div>
-              <h4 className="font-extrabold text-slate-900 text-sm">3. MCQ & Fuzzy Rubric Evaluator</h4>
+          <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-1.5">
+            <div className="flex items-center gap-2 text-xs font-bold text-slate-900">
+              <Calculator className="w-4 h-4 text-blue-600" />
+              <span>3. Rubric & MCQs</span>
             </div>
-            <p className="text-xs text-slate-700 font-medium pl-11">Evaluates MCQ options (1 mark) and fuzzy concept weights (2 marks).</p>
+            <p className="text-[11px] text-slate-500 leading-relaxed">
+              Validates MCQ option keys and applies 70% semantic tolerance threshold.
+            </p>
           </div>
 
-          <div className="bg-rose-100 border-2 border-slate-900 rounded-xl p-5 space-y-2 shadow-[3px_3px_0px_0px_rgba(15,23,42,1)]">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-white border-2 border-slate-900 flex items-center justify-center font-bold">
-                <ShieldCheck className="w-4 h-4" />
-              </div>
-              <h4 className="font-extrabold text-slate-900 text-sm">4. Confidence Scoring & HITL Router</h4>
+          <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-1.5">
+            <div className="flex items-center gap-2 text-xs font-bold text-slate-900">
+              <ShieldCheck className="w-4 h-4 text-blue-600" />
+              <span>4. Faculty Moderation</span>
             </div>
-            <p className="text-xs text-slate-700 font-medium pl-11">Calculates confidence. Flags evaluations with Sc &lt; 70% for teacher review.</p>
+            <p className="text-[11px] text-slate-500 leading-relaxed">
+              Flags items with confidence &lt; 70% or student rechecks for review.
+            </p>
           </div>
         </div>
 
         {completed && (
-          <div className="flex justify-end pt-4">
+          <div className="flex justify-end pt-2">
             <button
               onClick={onComplete}
-              className="neo-button-primary px-6 py-3 flex items-center gap-2 text-sm cursor-pointer"
+              className="academic-button-primary px-5 py-2.5 flex items-center gap-2 text-xs font-semibold cursor-pointer"
             >
-              Proceed to HITL Review Dashboard <ArrowRight className="w-4 h-4" />
+              Proceed to Faculty Moderation (HITL) <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
         )}
