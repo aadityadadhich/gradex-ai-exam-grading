@@ -37,7 +37,9 @@ except Exception as e:
     )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-Base = declarative_base()
+Base = sqlalchemy.orm.declarative_base()
+
+
 
 def get_db():
     db = SessionLocal()
