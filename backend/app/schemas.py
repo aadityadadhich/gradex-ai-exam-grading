@@ -83,5 +83,4 @@ class FinalResultResponse(BaseModel):
     num_auto_passed: int
     finalized_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
