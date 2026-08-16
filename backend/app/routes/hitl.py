@@ -10,22 +10,30 @@ router = APIRouter(prefix="/exam", tags=["HITL Dashboard"])
 @router.get("/{exam_id}/hitl-queue", response_model=schemas.HitlItemResponse)
 def get_next_hitl_item(exam_id: int, include_all: bool = False, db: Session = Depends(get_db)):
     """
-    Fetch next low-confidence evaluation requiring human review.
-    If include_all=True, allows reviewing any pending un-finalized item.
+    Fetch next item requiring teacher review (either low AI confidence or Student Recheck Request).
     """
-    query = db.query(models.Evaluation).outerjoin(
-        models.HitlReview, models.Evaluation.id == models.HitlReview.evaluation_id
-    ).filter(
+    # Priority 1: Student Recheck Requests
+    eval_item = db.query(models.Evaluation).filter(
         models.Evaluation.exam_id == exam_id,
-        models.HitlReview.id == None
-    )
+        models.Evaluation.recheck_requested == True,
+        models.Evaluation.recheck_status == "PENDING"
+    ).order_by(models.Evaluation.recheck_created_at.asc()).first()
 
-    if not include_all:
-        query = query.filter(models.Evaluation.requires_hitl == True)
+    # Priority 2: AI Flagged low-confidence evaluations
+    if not eval_item:
+        query = db.query(models.Evaluation).outerjoin(
+            models.HitlReview, models.Evaluation.id == models.HitlReview.evaluation_id
+        ).filter(
+            models.Evaluation.exam_id == exam_id,
+            models.HitlReview.id == None
+        )
 
-    eval_item = query.order_by(models.Evaluation.confidence_score.asc()).first()
+        if not include_all:
+            query = query.filter(models.Evaluation.requires_hitl == True)
 
-    # Fallback to any evaluation if no flagged items left and include_all is True
+        eval_item = query.order_by(models.Evaluation.confidence_score.asc()).first()
+
+    # Priority 3: Fallback to any unreviewed item
     if not eval_item and not include_all:
         eval_item = db.query(models.Evaluation).outerjoin(
             models.HitlReview, models.Evaluation.id == models.HitlReview.evaluation_id
@@ -51,16 +59,24 @@ def get_next_hitl_item(exam_id: int, include_all: bool = False, db: Session = De
         max_marks=eval_item.max_marks,
         confidence_score=eval_item.confidence_score,
         ocr_text_preview=eval_item.ocr_text_preview,
-        diagram_text=eval_item.diagram_extracted_text
+        diagram_text=eval_item.diagram_extracted_text,
+        recheck_requested=bool(eval_item.recheck_requested),
+        recheck_comment=eval_item.recheck_comment
     )
 
 @router.get("/{exam_id}/hitl-queue/count")
 def get_hitl_queue_count(exam_id: int, db: Session = Depends(get_db)):
-    """Get total pending, reviewed, and auto-passed metrics"""
+    """Get total pending, student recheck, and reviewed metrics"""
     total_evals = db.query(models.Evaluation).filter(models.Evaluation.exam_id == exam_id).count()
     auto_passed = db.query(models.Evaluation).filter(
         models.Evaluation.exam_id == exam_id,
         models.Evaluation.requires_hitl == False
+    ).count()
+
+    recheck_count = db.query(models.Evaluation).filter(
+        models.Evaluation.exam_id == exam_id,
+        models.Evaluation.recheck_requested == True,
+        models.Evaluation.recheck_status == "PENDING"
     ).count()
 
     hitl_flagged = db.query(models.Evaluation).filter(
@@ -72,13 +88,14 @@ def get_hitl_queue_count(exam_id: int, db: Session = Depends(get_db)):
         models.Evaluation, models.HitlReview.evaluation_id == models.Evaluation.id
     ).filter(models.Evaluation.exam_id == exam_id).count()
 
-    pending_reviews = max(hitl_flagged - completed_reviews, 0)
+    pending_reviews = max(hitl_flagged - completed_reviews, 0) + recheck_count
 
     return {
         "exam_id": exam_id,
         "total_evaluations": total_evals,
         "auto_passed": auto_passed,
         "hitl_flagged": hitl_flagged,
+        "recheck_requests": recheck_count,
         "completed_reviews": completed_reviews,
         "pending_reviews": pending_reviews
     }
@@ -90,7 +107,7 @@ def submit_hitl_review(
     req: schemas.HitlReviewRequest,
     db: Session = Depends(get_db)
 ):
-    """Submit teacher override / approval decision for a flagged question"""
+    """Submit teacher override / approval decision for a flagged question or recheck request"""
     eval_item = db.query(models.Evaluation).filter(
         models.Evaluation.id == evaluation_id,
         models.Evaluation.exam_id == exam_id
@@ -115,12 +132,14 @@ def submit_hitl_review(
         )
         db.add(review)
 
-    # Update Evaluation table
+    # Update Evaluation table & resolve recheck
     eval_item.marks_awarded = req.final_marks
     if req.teacher_feedback:
         eval_item.ai_reasoning = f"{eval_item.ai_reasoning or ''} | Teacher Feedback: {req.teacher_feedback}"
     eval_item.finalized = True
     eval_item.requires_hitl = False
+    eval_item.recheck_requested = False
+    eval_item.recheck_status = "RESOLVED"
 
     # Re-calculate FinalResult total marks for student
     submission_id = eval_item.submission_id
@@ -141,5 +160,5 @@ def submit_hitl_review(
         "evaluation_id": evaluation_id,
         "action": req.action,
         "final_marks": req.final_marks,
-        "message": "Review submitted successfully."
+        "message": "Review submitted and recheck resolved successfully."
     }

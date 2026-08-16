@@ -2,8 +2,9 @@ import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
-from app.database import engine, Base
-from app.routes import exams, rubrics, uploads, hitl, outputs
+from app.database import engine, Base, apply_migrations
+from app.routes import auth, student, exams, rubrics, uploads, hitl, outputs
+from app.routes.auth import seed_sample_credentials
 
 # Configure logging
 logging.basicConfig(
@@ -12,10 +13,13 @@ logging.basicConfig(
 )
 logger = logging.getLogger("exam_grading")
 
-# Create database tables automatically if they don't exist
+# Create database tables automatically if they don't exist & apply migrations
 try:
     Base.metadata.create_all(bind=engine)
-    logger.info("Database tables verified/created successfully.")
+    apply_migrations()
+    logger.info("Database tables verified & migrated successfully.")
+    seed_sample_credentials()
+    logger.info("Sample credentials seeded successfully.")
 except Exception as e:
     logger.error(f"Database initialization warning: {e}")
 
@@ -37,6 +41,8 @@ app.add_middleware(
 )
 
 # Include API Routers
+app.include_router(auth.router)
+app.include_router(student.router)
 app.include_router(exams.router)
 app.include_router(rubrics.router)
 app.include_router(uploads.router)
@@ -51,10 +57,11 @@ def root():
         "documentation": "/docs",
         "health_check": "/health",
         "endpoints": {
+            "auth_login": "POST /auth/login",
+            "student_exams": "GET /student/{roll_no}/exams",
             "create_exam": "POST /exam/create",
             "list_exams": "GET /exam/list",
-            "rubric_bot": "POST /exam/{id}/rubric-bot",
-            "submit_pdf": "POST /exam/{id}/submit-pdf",
+            "bulk_submit_pdfs": "POST /exam/{id}/bulk-submit-pdfs",
             "process_batch": "POST /exam/{id}/process",
             "hitl_queue": "GET /exam/{id}/hitl-queue",
             "results": "GET /exam/{id}/results"

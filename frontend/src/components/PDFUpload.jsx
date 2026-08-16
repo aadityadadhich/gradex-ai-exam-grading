@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../api/client';
-import { Upload, FileCheck, AlertCircle, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { Upload, FileCheck, AlertCircle, ArrowRight, CheckCircle2, Files, Loader2 } from 'lucide-react';
 
 export default function PDFUpload({ activeExam, onNext }) {
-  const [rollNo, setRollNo] = useState('Student_1');
-  const [pdfFile, setPdfFile] = useState(null);
+  const [selectedFiles, setSelectedFiles] = useState([]);
   const [uploading, setUploading] = useState(false);
   const [submissions, setSubmissions] = useState([]);
   const [errorMsg, setErrorMsg] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
 
   useEffect(() => {
     if (activeExam) {
@@ -24,39 +24,42 @@ export default function PDFUpload({ activeExam, onNext }) {
     }
   };
 
-  const handleUpload = async (e) => {
+  const handleFilesSelected = (e) => {
+    const files = Array.from(e.target.files);
+    setSelectedFiles(files);
+    setErrorMsg('');
+    setSuccessMsg('');
+  };
+
+  const handleBulkUpload = async (e) => {
     e.preventDefault();
     if (!activeExam) {
       alert('Please select or create an exam first.');
       return;
     }
-    if (!rollNo.trim() || !pdfFile) {
-      alert('Please enter a student Roll Number and select a PDF file.');
+    if (selectedFiles.length === 0) {
+      alert('Please select one or more PDF answer scripts.');
       return;
     }
 
     setUploading(true);
     setErrorMsg('');
+    setSuccessMsg('');
+
     try {
       const formData = new FormData();
-      formData.append('roll_no', rollNo.trim());
-      formData.append('pdf_file', pdfFile);
+      selectedFiles.forEach((file) => {
+        formData.append('pdf_files', file);
+      });
 
-      await api.submitStudentPdf(activeExam.id, formData);
-      await fetchSubmissions();
-
-      // Increment roll number automatically for rapid entry (Student_1 -> Student_2)
-      const numMatch = rollNo.match(/(\d+)/);
-      if (numMatch) {
-        const nextNum = (parseInt(numMatch[1]) + 1).toString();
-        const prefix = rollNo.substring(0, numMatch.index);
-        setRollNo(`${prefix}${nextNum}`);
-      }
-      setPdfFile(null);
-      const inputEl = document.getElementById('pdfInput');
+      const res = await api.bulkSubmitStudentPdfs(activeExam.id, formData);
+      setSuccessMsg(`Successfully uploaded and linked ${res.data.uploaded_count} student answer copies!`);
+      setSelectedFiles([]);
+      const inputEl = document.getElementById('bulkPdfInput');
       if (inputEl) inputEl.value = '';
+      await fetchSubmissions();
     } catch (err) {
-      setErrorMsg('Upload failed: ' + (err.response?.data?.detail || err.message));
+      setErrorMsg('Bulk upload failed: ' + (err.response?.data?.detail || err.message));
     } finally {
       setUploading(false);
     }
@@ -82,10 +85,10 @@ export default function PDFUpload({ activeExam, onNext }) {
           <div>
             <h2 className="text-2xl font-black text-slate-900 flex items-center gap-3">
               <Upload className="w-7 h-7 text-slate-900" />
-              Upload Student Exam PDFs
+              Bulk Upload Student Answer Copies
             </h2>
             <p className="text-xs text-slate-600 font-semibold mt-1">
-              Upload handwritten or digital student answer PDFs for exam: <b className="text-slate-900">{activeExam.exam_name}</b>
+              Upload multiple student PDFs at once for exam: <b className="text-slate-900">{activeExam.exam_name}</b>. Roll numbers are automatically detected from PDF filenames (e.g. <code>Student_1.pdf</code> &rarr; <b>Student_1</b>).
             </p>
           </div>
 
@@ -102,41 +105,50 @@ export default function PDFUpload({ activeExam, onNext }) {
           </div>
         )}
 
-        <form onSubmit={handleUpload} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {successMsg && (
+          <div className="bg-emerald-200 border-2 border-slate-900 rounded-xl p-4 flex items-center gap-3 text-xs font-bold text-slate-900 neo-badge">
+            <CheckCircle2 className="w-5 h-5 text-emerald-800 flex-shrink-0" />
+            <span>{successMsg}</span>
+          </div>
+        )}
+
+        <form onSubmit={handleBulkUpload} className="space-y-6">
+          <div className="bg-purple-50 border-2 border-dashed border-slate-900 rounded-2xl p-8 text-center space-y-4">
+            <Files className="w-12 h-12 text-purple-700 mx-auto" />
             <div>
-              <label className="block text-xs font-black uppercase text-slate-900 mb-2">Student Roll Number / Identifier</label>
-              <input
-                type="text"
-                value={rollNo}
-                onChange={(e) => setRollNo(e.target.value)}
-                placeholder="e.g., Student_1"
-                className="neo-input w-full px-4 py-3 text-sm font-black uppercase"
-                required
-              />
+              <h4 className="font-black text-slate-900 text-base">Select Single or Multiple Student Answer PDFs</h4>
+              <p className="text-xs text-slate-600 font-semibold mt-1">
+                You can select all 37 student copies at once (e.g. Student_1.pdf to Student_37.pdf)
+              </p>
             </div>
 
-            <div>
-              <label className="block text-xs font-black uppercase text-slate-900 mb-2">Handwritten PDF File</label>
-              <input
-                id="pdfInput"
-                type="file"
-                accept=".pdf"
-                onChange={(e) => setPdfFile(e.target.files[0])}
-                className="block w-full text-xs text-slate-700 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-2 file:border-slate-900 file:text-xs file:font-black file:bg-yellow-300 file:text-slate-900 cursor-pointer"
-                required
-              />
-            </div>
+            <input
+              id="bulkPdfInput"
+              type="file"
+              accept=".pdf"
+              multiple
+              onChange={handleFilesSelected}
+              className="block mx-auto text-xs text-slate-700 file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-2 file:border-slate-900 file:text-xs file:font-black file:bg-yellow-300 file:text-slate-900 cursor-pointer"
+              required
+            />
+
+            {selectedFiles.length > 0 && (
+              <div className="bg-white border-2 border-slate-900 rounded-xl p-3 inline-block shadow-[2px_2px_0px_0px_rgba(15,23,42,1)]">
+                <span className="text-xs font-black text-slate-900">
+                  📁 {selectedFiles.length} PDF files selected for upload
+                </span>
+              </div>
+            )}
           </div>
 
           <div className="flex justify-end pt-2">
             <button
               type="submit"
-              disabled={uploading || !pdfFile || !rollNo}
+              disabled={uploading || selectedFiles.length === 0}
               className="neo-button-accent px-6 py-3 flex items-center gap-2 text-sm cursor-pointer disabled:opacity-50"
             >
-              <Upload className="w-4 h-4" />
-              {uploading ? 'Uploading PDF...' : 'Upload Student PDF'}
+              {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+              {uploading ? `Uploading ${selectedFiles.length} PDFs...` : `Upload ${selectedFiles.length || ''} Student Copies`}
             </button>
           </div>
         </form>
@@ -164,7 +176,7 @@ export default function PDFUpload({ activeExam, onNext }) {
               <div key={sub.id} className="bg-slate-50 border-2 border-slate-900 rounded-xl p-3 text-center space-y-1 shadow-[2px_2px_0px_0px_rgba(15,23,42,1)]">
                 <span className="text-xs font-black text-slate-900 block font-mono">{sub.roll_no}</span>
                 <span className="text-[10px] text-emerald-700 font-bold flex items-center justify-center gap-1">
-                  <CheckCircle2 className="w-3 h-3" /> Uploaded
+                  <CheckCircle2 className="w-3 h-3" /> Linked
                 </span>
               </div>
             ))}

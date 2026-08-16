@@ -1,8 +1,8 @@
 # 📊 Project Progress & Handoff Tracking
 
 > **Project:** AI-Powered Subjective Exam Grading System (Gradex AI)  
-> **Status:** Codebase 100% Pushed to GitHub Repository  
-> **Last Updated:** 2026-08-14  
+> **Status:** New Updates Complete & Live — Student & Teacher Portals, Semantic Grading, Bulk Upload, HITL Rechecks  
+> **Last Updated:** 2026-08-16  
 
 ---
 
@@ -11,40 +11,38 @@ This file maintains the exact state of implementation so that work can be resume
 
 ---
 
-## 🏁 GitHub Repository Status
+## 🏁 New Updates Implementation Matrix (from `new-updates.txt`)
 
-- [x] **1. Remote Repository**: Connected to `https://github.com/aadityadadhich/gradex-ai-exam-grading.git`.
-- [x] **2. Working Tree**: Clean (`nothing to commit, working tree clean`).
-- [x] **3. Branch**: `main` up to date with `origin/main`.
-- [x] **4. Latest Commit**: `895b628` — *Update application progress, evaluation logs, and documentation*.
-
----
-
-## 🚀 Execution Roadmap & Progress Matrix
-
-| Phase | Module / Task | Location | Status | Notes |
-|---|---|---|---|---|
-| **Phase 1** | Backend Skeleton (`FastAPI`, DB Models, Config) | `backend/app/` | ✅ Complete | `main.py`, `config.py`, `database.py`, `models.py`, `schemas.py` |
-| **Phase 1** | Frontend Neubrutalism UI | `frontend/` | ✅ Complete | `index.css` Neubrutalism utility classes |
-| **Phase 1** | Database Schema & SQLAlchemy Models | `backend/app/models.py` | ✅ Complete | 8 tables mapped & Supabase PostgreSQL tables verified |
-| **Phase 2** | OCR Engine (`PyMuPDF` + `PaddleOCR`) | `backend/app/services/ocr_service.py` | ✅ Complete | Direct PDF/TXT text extraction & page image rendering |
-| **Phase 2** | Multi-Provider LLM & Structured Parser | `backend/app/services/llm_service.py` | ✅ Enhanced | Gemini 2.5 Flash + Mistral API + structured 35-question parser |
-| **Phase 2** | Unified MCQ & Short Answer Evaluator | `backend/app/services/evaluation_service.py` | ✅ Enhanced | MCQ option matcher + fuzzy keyword scoring engine |
-| **Phase 2** | PDF Report Generator & CSV Exporter | `backend/app/services/pdf_generator.py` | ✅ Complete | ReportLab PDF grade report generator & CSV scoresheet builder |
-| **Phase 2** | Core API Routes & Progress Endpoint | `backend/app/routes/` | ✅ Enhanced | `GET /exam/{id}/progress` endpoint + root `GET /` route |
-| **Phase 2** | Exam Setup UI Component | `frontend/src/components/ExamSetup.jsx` | ✅ Redesigned | Neubrutalism layout + 0-question input support |
-| **Phase 2** | Rubric Builder & AI Rubric Bot UI Component | `frontend/src/components/RubricBot.jsx` | ✅ Redesigned | Neubrutalism layout + live wait timer + 35-question support |
-| **Phase 2** | Student PDF Upload UI Component | `frontend/src/components/PDFUpload.jsx` | ✅ Redesigned | Neubrutalism layout + roll number auto-increment |
-| **Phase 2** | AI Pipeline Execution & Progress Bar Component | `frontend/src/components/ProcessingView.jsx` | ✅ Redesigned | Neubrutalism layout + real-time progress bar polling |
-| **Phase 2** | Teacher HITL Review Dashboard Component | `frontend/src/components/HitlDashboard.jsx` | ✅ Redesigned | Neubrutalism layout + split-screen review & overrides |
-| **Phase 2** | Master Results & Export Reports Component | `frontend/src/components/ResultsViewer.jsx` | ✅ Redesigned | Neubrutalism layout + master CSV/PDF downloads |
-| **Phase 3** | GitHub Deployment | GitHub `main` | ✅ Pushed | All commits pushed to `aadityadadhich/gradex-ai-exam-grading` |
+- [x] **1. Removed Mistral API (Gemini API Only)**: Removed Mistral API usages in `llm_service.py` and configured multi-model Gemini fallback (`gemini-2.5-flash`, `gemini-flash-latest`, `gemini-1.5-flash`).
+- [x] **2. Removed Double-Blind / Anonymization**: Removed anonymization overhead; directly linked Student Roll Numbers (`Student_1` ... `Student_37`) and Teacher Employee IDs (`Teacher_1`, `Teacher_2`).
+- [x] **3. Role-Based Login (Student & Teacher)**:
+  - Created `Login.jsx` component with Student & Teacher role toggles.
+  - Seeded 37 Student accounts (`Student_1` to `Student_37` / `password123`) and 2 Teacher accounts (`Teacher_1`, `Teacher_2` / `teacher123`).
+  - Generated and saved `credentials.txt` in workspace root.
+- [x] **4. Student Portal (`StudentDashboard.jsx`)**:
+  - Displays only the student's evaluated papers and marks.
+  - Question-by-question breakdown with **side-by-side view** (Original student OCR text on left, AI Reasoning + Reference Solution + Teacher Feedback on right).
+  - **Raise Recheck Request**: Interactive modal allowing students to flag questions, submit explanation comments, and track recheck status.
+- [x] **5. Teacher Portal & Exam Management**:
+  - Create new exams, delete existing exams with confirmation (`DELETE /exam/{id}`).
+  - Bulk upload student PDFs with automatic Roll Number detection from filenames (e.g. `Student_1.pdf` &rarr; `Student_1`).
+  - Run AI pipeline with real-time progress bar.
+  - HITL Review queue prioritizing Student Recheck Requests with student comments highlighted.
+- [x] **6. Simplified Semantic Evaluation Process**:
+  - Replaced rigid keyword matching with Gemini semantic evaluation + tolerance threshold (70% threshold).
+  - Accurate MCQ matching (Options A/B/C/D).
+- [x] **7. Active Servers**:
+  - React Frontend (Neubrutalism UI): `http://localhost:3000` (Task ID `task-538`)
+  - FastAPI Backend API: `http://127.0.0.1:8000` (Task ID `task-536`)
 
 ---
 
 ## 📝 Activity Log
 
-### [2026-08-14] GitHub Push Completed
-- Staged all files, documentation, and evaluation outputs.
-- Executed `git push origin main`.
-- Verified repository status: `Your branch is up to date with 'origin/main'`.
+### [2026-08-16] Implemented all requirements from `new-updates.txt`
+- Created `auth.py` and `student.py` routes.
+- Built `Login.jsx` and `StudentDashboard.jsx`.
+- Added bulk PDF upload (`POST /exam/{id}/bulk-submit-pdfs`).
+- Added exam deletion endpoint (`DELETE /exam/{id}`).
+- Created `credentials.txt` containing login credentials for all 37 test students and teachers.
+- Verified live server operations on both `localhost:3000` and `localhost:8000`.

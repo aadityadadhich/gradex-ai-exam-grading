@@ -1,0 +1,11 @@
+APP not check copy , remove Mistrial API usages and only USE GEMINI one.
+
+remove anonymous or double bind , its only add complexity and reducing functionality.
+
+make a login page at start were user type can be STUDENT , Teacher. if student logins (using Roll No and password) then he can see his dashbord with  only his checked copies, marks and option to raise recheck request with comments (like which , question has problem and needed to be rechecked by HTIL).
+and if teacher login (using employee id and password) this dashbord he can create new or delete existing exam. then start whole AI Checking Pipeline.
+also add option to bulk upload student's copy and ability to associate Roll no with each copy associated(considering uploaded PDF's name comntain roll no of student).
+keep features like progress tracking etc.
+
+also let's change Keyword based checking process to normal simplified one. now after handwriting is converted to text (via OCR) to a temproray file (for checking and will be delete after final evaluation report is made) it is compared to rubaric and if answer is atleast THREASHOLD level tolrarence the marks will be awarded. also both student and teacher must be able see original answer sheet , AI + HTIL 's evaluation logic as separeate files in side by side view.
+also after making these changes , test everything , make sample credential and save then credential.txt and run app for me and then let me check app too.

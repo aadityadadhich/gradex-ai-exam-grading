@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../api/client';
-import { UserCheck, CheckCircle2, Edit3, SkipForward, AlertCircle, FileText, Sparkles, Loader2 } from 'lucide-react';
+import { UserCheck, CheckCircle2, Edit3, SkipForward, AlertCircle, FileText, Sparkles, Loader2, MessageSquare, HelpCircle } from 'lucide-react';
 
 export default function HitlDashboard({ activeExam, onComplete }) {
   const [item, setItem] = useState(null);
-  const [counts, setCounts] = useState({ total_evaluations: 0, pending_reviews: 0, completed_reviews: 0 });
+  const [counts, setCounts] = useState({ total_evaluations: 0, pending_reviews: 0, completed_reviews: 0, recheck_requests: 0 });
   const [overrideScore, setOverrideScore] = useState('');
   const [feedback, setFeedback] = useState('');
   const [loading, setLoading] = useState(true);
@@ -71,9 +71,11 @@ export default function HitlDashboard({ activeExam, onComplete }) {
           <span className="text-xs text-slate-800 font-extrabold uppercase block">Total Evaluations</span>
           <span className="text-3xl font-black text-slate-900 mt-1 block">{counts.total_evaluations || 0}</span>
         </div>
-        <div className="bg-emerald-100 border-2 border-slate-900 rounded-xl p-5 shadow-[4px_4px_0px_0px_rgba(15,23,42,1)]">
-          <span className="text-xs text-slate-800 font-extrabold uppercase block">Auto-Passed (Sc &ge; 70%)</span>
-          <span className="text-3xl font-black text-emerald-800 mt-1 block">{counts.auto_passed || 0}</span>
+        <div className="bg-amber-100 border-2 border-slate-900 rounded-xl p-5 shadow-[4px_4px_0px_0px_rgba(15,23,42,1)]">
+          <span className="text-xs text-slate-800 font-extrabold uppercase block flex items-center gap-1.5">
+            <MessageSquare className="w-3.5 h-3.5 text-amber-900" /> Student Rechecks
+          </span>
+          <span className="text-3xl font-black text-amber-900 mt-1 block">{counts.recheck_requests || 0}</span>
         </div>
         <div className="bg-rose-100 border-2 border-slate-900 rounded-xl p-5 shadow-[4px_4px_0px_0px_rgba(15,23,42,1)]">
           <span className="text-xs text-slate-800 font-extrabold uppercase block">Pending HITL Queue</span>
@@ -94,12 +96,13 @@ export default function HitlDashboard({ activeExam, onComplete }) {
           <CheckCircle2 className="w-12 h-12 text-emerald-600 mx-auto" />
           <h3 className="text-xl font-black text-slate-900">HITL Review Queue Completed!</h3>
           <p className="text-slate-600 text-sm max-w-md mx-auto font-medium">
-            All flagged questions have been verified by teachers or passed high-confidence criteria.
+            All flagged questions and student recheck requests have been reviewed by teachers or passed high-confidence criteria.
           </p>
         </div>
       ) : (
         /* Split Screen HITL Review Interface */
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          
           {/* Left Pane: Student Answer Extract */}
           <div className="neo-box p-6 space-y-4">
             <div className="flex items-center justify-between border-b-2 border-slate-900 pb-3">
@@ -110,6 +113,18 @@ export default function HitlDashboard({ activeExam, onComplete }) {
                 Question {item.question_id} (Max: {item.max_marks} Marks)
               </span>
             </div>
+
+            {/* Student Recheck Alert Box */}
+            {item.recheck_requested && (
+              <div className="bg-amber-100 border-2 border-slate-900 rounded-xl p-4 space-y-1 shadow-[3px_3px_0px_0px_rgba(15,23,42,1)]">
+                <span className="text-xs font-black text-amber-900 flex items-center gap-1.5 uppercase">
+                  <HelpCircle className="w-4 h-4" /> Student Requested Recheck:
+                </span>
+                <p className="text-xs text-slate-900 font-bold leading-relaxed bg-white/80 p-2.5 rounded-lg border border-slate-900">
+                  "{item.recheck_comment || 'Student requested re-evaluation of this question.'}"
+                </p>
+              </div>
+            )}
 
             <div>
               <h4 className="text-xs font-black uppercase text-slate-900 mb-2 flex items-center gap-2">
@@ -129,44 +144,17 @@ export default function HitlDashboard({ activeExam, onComplete }) {
               </h3>
               <div className="text-right">
                 <span className="text-[10px] uppercase font-black text-slate-600 block">Confidence Score</span>
-                <span className="text-xs font-black px-2 py-0.5 bg-rose-200 border-2 border-slate-900 rounded-lg text-slate-900">
-                  {Math.round(item.confidence_score * 100)}% (Flagged)
+                <span className={`text-xs font-black px-2 py-0.5 border-2 border-slate-900 rounded-lg text-slate-900 ${
+                  item.confidence_score >= 0.70 ? 'bg-emerald-200' : 'bg-rose-200'
+                }`}>
+                  {Math.round(item.confidence_score * 100)}%
                 </span>
-              </div>
-            </div>
-
-            {/* Extracted & Matched Keywords Tags */}
-            <div className="space-y-3">
-              <div>
-                <label className="block text-[11px] font-black uppercase text-slate-900 mb-1.5">
-                  Extracted Student Keywords
-                </label>
-                <div className="flex flex-wrap gap-1.5">
-                  {item.student_extracted_keywords?.map((kw, idx) => (
-                    <span key={idx} className="px-2 py-1 bg-purple-100 border-2 border-slate-900 text-xs font-bold rounded-lg text-slate-900">
-                      {kw.keyword}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-black uppercase text-slate-900 mb-1.5">
-                  Rubric Keyword Matches
-                </label>
-                <div className="flex flex-wrap gap-1.5">
-                  {item.matched_keywords?.map((mk, idx) => (
-                    <span key={idx} className="px-2 py-1 bg-emerald-200 border-2 border-slate-900 text-xs font-bold rounded-lg text-slate-900">
-                      ✓ {mk.student_keyword} &rarr; {mk.rubric_keyword}
-                    </span>
-                  ))}
-                </div>
               </div>
             </div>
 
             {/* AI Reasoning */}
             <div className="bg-yellow-50 border-2 border-slate-900 rounded-xl p-4 space-y-1 shadow-[2px_2px_0px_0px_rgba(15,23,42,1)]">
-              <label className="block text-[11px] font-black uppercase text-slate-900">AI Reasoning</label>
+              <label className="block text-[11px] font-black uppercase text-slate-900">AI Evaluation Logic</label>
               <p className="text-xs text-slate-900 font-medium leading-relaxed">{item.ai_reasoning}</p>
             </div>
 
@@ -190,7 +178,7 @@ export default function HitlDashboard({ activeExam, onComplete }) {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-black text-slate-900 mb-1">Teacher Notes / Feedback</label>
+                  <label className="block text-xs font-black text-slate-900 mb-1">Teacher Feedback Note</label>
                   <input
                     type="text"
                     value={feedback}

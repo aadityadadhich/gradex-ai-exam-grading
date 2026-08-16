@@ -3,6 +3,16 @@ from sqlalchemy.orm import relationship
 from datetime import datetime
 from app.database import Base
 
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String(100), unique=True, index=True, nullable=False) # Roll No for Student, Employee ID for Teacher
+    password_hash = Column(String(255), nullable=False)
+    role = Column(String(20), nullable=False) # 'STUDENT' or 'TEACHER'
+    full_name = Column(String(255), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
 class Exam(Base):
     __tablename__ = "exams"
 
@@ -80,6 +90,12 @@ class Evaluation(Base):
     diagram_extracted_text = Column(Text, nullable=True)
     ocr_text_preview = Column(Text, nullable=True)
     
+    # Recheck request fields
+    recheck_requested = Column(Boolean, default=False)
+    recheck_comment = Column(Text, nullable=True)
+    recheck_status = Column(String(50), nullable=True)  # 'PENDING', 'RESOLVED'
+    recheck_created_at = Column(DateTime, nullable=True)
+
     finalized = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

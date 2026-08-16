@@ -10,10 +10,20 @@ const client = axios.create({
 });
 
 export const api = {
+  // Authentication
+  login: (credentials) => client.post('/auth/login', credentials),
+  getUserProfile: (username, role) => client.get(`/auth/me/${username}?role=${role}`),
+
+  // Student Portal
+  getStudentExams: (rollNo) => client.get(`/student/${rollNo}/exams`),
+  getStudentReport: (rollNo, examId) => client.get(`/student/${rollNo}/exam/${examId}/report`),
+  submitStudentRecheck: (rollNo, examId, data) => client.post(`/student/${rollNo}/exam/${examId}/recheck`, data),
+
   // Exams
   createExam: (data) => client.post('/exam/create', data),
   listExams: () => client.get('/exam/list'),
   getExam: (examId) => client.get(`/exam/${examId}`),
+  deleteExam: (examId) => client.delete(`/exam/${examId}`),
   processExam: (examId) => client.post(`/exam/${examId}/process`),
   getExamProgress: (examId) => client.get(`/exam/${examId}/progress`),
 
@@ -26,6 +36,9 @@ export const api = {
 
   // Uploads
   submitStudentPdf: (examId, formData) => client.post(`/exam/${examId}/submit-pdf`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
+  bulkSubmitStudentPdfs: (examId, formData) => client.post(`/exam/${examId}/bulk-submit-pdfs`, formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
   }),
   listSubmissions: (examId) => client.get(`/exam/${examId}/submissions`),
