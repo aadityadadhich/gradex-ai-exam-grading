@@ -1,18 +1,18 @@
 import os
+import shutil
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, status
 from sqlalchemy.orm import Session
 from typing import List, Dict, Any
 
 from app.database import get_db
+from app.config import settings
 from app import models, schemas
 from app.services.ocr_service import OCRService
-from app.services.llm_service import LLMService
 from app.services.evaluation_service import EvaluationService
 
 router = APIRouter(prefix="/exam", tags=["Exams"])
 
 ocr_service = OCRService()
-llm_service = LLMService()
 eval_service = EvaluationService()
 
 # Global in-memory progress tracker for live batch processing updates
@@ -53,6 +53,29 @@ def get_exam(exam_id: int, db: Session = Depends(get_db)):
     if not exam:
         raise HTTPException(status_code=404, detail="Exam not found")
     return exam
+
+@router.delete("/{exam_id}", status_code=status.HTTP_200_OK)
+def delete_exam(exam_id: int, db: Session = Depends(get_db)):
+    """Delete an exam and all related submissions, rubrics, evaluations, and outputs"""
+    exam = db.query(models.Exam).filter(models.Exam.id == exam_id).first()
+    if not exam:
+        raise HTTPException(status_code=404, detail="Exam not found")
+
+    # Clean up uploaded folder if exists
+    exam_dir = os.path.join(settings.UPLOAD_DIR, f"exam_{exam_id}")
+    if os.path.exists(exam_dir):
+        try:
+            shutil.rmtree(exam_dir)
+        except Exception:
+            pass
+
+    db.delete(exam)
+    db.commit()
+
+    if exam_id in BATCH_PROGRESS:
+        del BATCH_PROGRESS[exam_id]
+
+    return {"status": "success", "message": f"Exam {exam_id} deleted successfully"}
 
 @router.get("/{exam_id}/progress")
 def get_exam_progress(exam_id: int, db: Session = Depends(get_db)):
@@ -153,13 +176,9 @@ def _process_batch_background(exam_id: int):
                 ocr_clarity = pages[min(q_idx, len(pages)-1)].get("confidence", 0.85) if pages else 0.85
                 page_text = pages[min(q_idx, len(pages)-1)]["text"] if pages else full_ocr_text
 
-                # Extract keywords via LLM/Heuristics
-                extracted_kws = llm_service.extract_keywords_from_text(page_text, question_context=q_id)
-
-                # Evaluate using unified service
+                # Evaluate using simplified semantic evaluator
                 eval_res = eval_service.evaluate_question(
                     student_ocr_text=full_ocr_text if q_rubric.get("type") == "MCQ" else page_text,
-                    student_keywords=extracted_kws,
                     q_rubric=q_rubric,
                     ocr_clarity=ocr_clarity
                 )
@@ -173,7 +192,7 @@ def _process_batch_background(exam_id: int):
                     submission_id=sub.id,
                     exam_id=exam_id,
                     question_id=q_id,
-                    extracted_keywords=extracted_kws,
+                    extracted_keywords=[],
                     matched_keywords=eval_res["matched"],
                     marks_awarded=eval_res["marks_awarded"],
                     max_marks=eval_res["max_marks"],

@@ -2,6 +2,27 @@ from pydantic import BaseModel, Field
 from typing import List, Dict, Any, Optional
 from datetime import datetime
 
+# --- Auth Schemas ---
+class UserLoginRequest(BaseModel):
+    username: str = Field(..., example="Student_1")
+    password: str = Field(..., example="password123")
+    role: str = Field(..., example="STUDENT") # 'STUDENT' or 'TEACHER'
+
+class UserResponse(BaseModel):
+    id: int
+    username: str
+    role: str
+    full_name: Optional[str] = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: UserResponse
+
 # --- Exam Schemas ---
 class ExamCreateRequest(BaseModel):
     exam_name: str = Field(..., example="Physics Midterm")
@@ -51,6 +72,10 @@ class SubmissionResponse(BaseModel):
     class Config:
         from_attributes = True
 
+class BulkUploadResponse(BaseModel):
+    uploaded_count: int
+    submissions: List[SubmissionResponse]
+
 # --- Evaluation & HITL Schemas ---
 class HitlReviewRequest(BaseModel):
     action: str  # APPROVED, MODIFIED, REJECTED
@@ -70,6 +95,8 @@ class HitlItemResponse(BaseModel):
     confidence_score: float
     ocr_text_preview: Optional[str] = None
     diagram_text: Optional[str] = None
+    recheck_requested: Optional[bool] = False
+    recheck_comment: Optional[str] = None
 
 class FinalResultResponse(BaseModel):
     roll_no: str
@@ -81,3 +108,30 @@ class FinalResultResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+# --- Student Specific Schemas ---
+class RecheckSubmitRequest(BaseModel):
+    evaluation_id: int
+    comment: str = Field(..., example="I explained the complete derivation in line 4 which was missed by AI.")
+
+class StudentQuestionDetail(BaseModel):
+    evaluation_id: int
+    question_id: str
+    max_marks: float
+    marks_awarded: float
+    ocr_text_preview: Optional[str] = None
+    ai_reasoning: Optional[str] = None
+    teacher_feedback: Optional[str] = None
+    recheck_requested: bool = False
+    recheck_comment: Optional[str] = None
+    recheck_status: Optional[str] = None
+
+class StudentExamReportResponse(BaseModel):
+    exam_id: int
+    exam_name: str
+    subject: str
+    roll_no: str
+    total_marks: float
+    max_total_marks: float
+    pdf_download_url: str
+    questions: List[StudentQuestionDetail]
