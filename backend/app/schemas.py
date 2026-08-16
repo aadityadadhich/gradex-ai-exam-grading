@@ -53,8 +53,7 @@ class SubmissionResponse(BaseModel):
     upload_timestamp: datetime
     processed_at: Optional[datetime] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # --- Evaluation & HITL Schemas ---
 class HitlReviewRequest(BaseModel):
