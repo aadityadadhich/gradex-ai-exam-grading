@@ -28,7 +28,7 @@ def create_exam(req: schemas.ExamCreateRequest, db: Session = Depends(get_db)):
         total_marks += num_q * marks_q
 
     if total_marks == 0:
-        total_marks = 50  # Default fallback if structure empty
+        total_marks = 50
 
     exam = models.Exam(
         exam_name=req.exam_name,
@@ -61,7 +61,6 @@ def delete_exam(exam_id: int, db: Session = Depends(get_db)):
     if not exam:
         raise HTTPException(status_code=404, detail="Exam not found")
 
-    # Clean up uploaded folder if exists
     exam_dir = os.path.join(settings.UPLOAD_DIR, f"exam_{exam_id}")
     if os.path.exists(exam_dir):
         try:
@@ -87,7 +86,6 @@ def get_exam_progress(exam_id: int, db: Session = Depends(get_db)):
         prog["total_submissions"] = total_submissions
         return prog
 
-    # Fallback status if background task not in memory
     results_count = db.query(models.FinalResult).filter(models.FinalResult.exam_id == exam_id).count()
     percent = (results_count / total_submissions * 100.0) if total_submissions > 0 else 0.0
 
@@ -115,7 +113,6 @@ def process_exam(exam_id: int, background_tasks: BackgroundTasks, db: Session = 
     if not submissions:
         raise HTTPException(status_code=400, detail="No student submissions uploaded yet.")
 
-    # Initialize batch progress record
     BATCH_PROGRESS[exam_id] = {
         "exam_id": exam_id,
         "total_submissions": len(submissions),
@@ -145,7 +142,6 @@ def _process_batch_background(exam_id: int):
         total_subs = len(submissions)
 
         for sub_idx, sub in enumerate(submissions):
-            # Update live progress tracker
             pct = round((sub_idx / total_subs) * 100.0, 1)
             BATCH_PROGRESS[exam_id] = {
                 "exam_id": exam_id,
@@ -156,12 +152,12 @@ def _process_batch_background(exam_id: int):
                 "status": "processing"
             }
 
-            # 1. OCR Extraction
+            # 1. OCR Extraction (PyMuPDF / EasyOCR)
             ocr_res = ocr_service.extract_text_from_pdf(sub.pdf_path)
             pages = ocr_res.get("pages", [])
-            full_ocr_text = "\n".join([p["text"] for p in pages])
+            full_ocr_text = "\n".join([p.get("text", "") for p in pages])
 
-            # Clear previous evaluations for re-run
+            # Clear previous evaluations for this submission
             db.query(models.Evaluation).filter(models.Evaluation.submission_id == sub.id).delete()
 
             total_sub_marks = 0.0
@@ -174,11 +170,9 @@ def _process_batch_background(exam_id: int):
             for q_idx, q_rubric in enumerate(questions_rubric):
                 q_id = q_rubric.get("q_id", f"Q{q_idx+1}")
                 ocr_clarity = pages[min(q_idx, len(pages)-1)].get("confidence", 0.85) if pages else 0.85
-                page_text = pages[min(q_idx, len(pages)-1)]["text"] if pages else full_ocr_text
 
-                # Evaluate using simplified semantic evaluator
                 eval_res = eval_service.evaluate_question(
-                    student_ocr_text=full_ocr_text if q_rubric.get("type") == "MCQ" else page_text,
+                    full_student_text=full_ocr_text,
                     q_rubric=q_rubric,
                     ocr_clarity=ocr_clarity
                 )
@@ -199,7 +193,7 @@ def _process_batch_background(exam_id: int):
                     confidence_score=eval_res["confidence_score"],
                     requires_hitl=eval_res["requires_hitl"],
                     ai_reasoning=eval_res["ai_reasoning"],
-                    ocr_text_preview=page_text[:400]
+                    ocr_text_preview=eval_res.get("extracted_answer", full_ocr_text[:300])
                 )
                 db.add(evaluation)
 
@@ -207,7 +201,6 @@ def _process_batch_background(exam_id: int):
                 total_conf += eval_res["confidence_score"]
                 num_evals += 1
 
-            # Update FinalResult record
             avg_conf = (total_conf / num_evals) if num_evals > 0 else 0.0
             
             existing_res = db.query(models.FinalResult).filter(models.FinalResult.submission_id == sub.id).first()
@@ -231,7 +224,6 @@ def _process_batch_background(exam_id: int):
             sub.processed_at = models.datetime.utcnow()
             db.commit()
 
-        # Mark completed
         BATCH_PROGRESS[exam_id] = {
             "exam_id": exam_id,
             "total_submissions": total_subs,

@@ -5,12 +5,17 @@ load_dotenv()
 
 
 class Settings:
-    PROJECT_NAME: str = "AI Exam Grading System"
-    PROJECT_VERSION: str = "1.0.0"
+    PROJECT_NAME: str = "Gradex AI Academic Exam Assessment Platform"
+    PROJECT_VERSION: str = "2.0.0"
     
     DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./exam_grading.db")
+    
+    # Local Ollama Configuration (Qwen 2.5 7B / 14B)
+    OLLAMA_BASE_URL: str = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+    OLLAMA_MODEL: str = os.getenv("OLLAMA_MODEL", "qwen2.5:7b")
+    
+    # Cloud Fallback (Gemini API)
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
-    MISTRAL_API_KEY: str = os.getenv("MISTRAL_API_KEY", "")
     
     UPLOAD_DIR: str = os.getenv("UPLOAD_DIR", "./uploads")
     OUTPUT_DIR: str = os.getenv("OUTPUT_DIR", "./outputs")

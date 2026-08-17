@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../api/client';
-import { UserCheck, CheckCircle2, Edit3, SkipForward, AlertCircle, FileText, Sparkles, Loader2, MessageSquare, HelpCircle } from 'lucide-react';
+import { UserCheck, CheckCircle2, Edit3, SkipForward, AlertCircle, FileText, Sparkles, Loader2, MessageSquare, HelpCircle, ShieldCheck } from 'lucide-react';
 
 export default function HitlDashboard({ activeExam, onComplete }) {
   const [item, setItem] = useState(null);
@@ -55,7 +55,7 @@ export default function HitlDashboard({ activeExam, onComplete }) {
       });
       await loadQueueItem();
     } catch (err) {
-      alert('Error submitting review: ' + (err.response?.data?.detail || err.message));
+      alert('Error submitting moderation decision: ' + (err.response?.data?.detail || err.message));
     } finally {
       setSubmitting(false);
     }
@@ -64,105 +64,104 @@ export default function HitlDashboard({ activeExam, onComplete }) {
   if (!activeExam) return null;
 
   return (
-    <div className="space-y-8 animate-fade-in">
+    <div className="space-y-6 animate-fade-in">
       {/* Top Metrics Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-yellow-100 border-2 border-slate-900 rounded-xl p-5 shadow-[4px_4px_0px_0px_rgba(15,23,42,1)]">
-          <span className="text-xs text-slate-800 font-extrabold uppercase block">Total Evaluations</span>
-          <span className="text-3xl font-black text-slate-900 mt-1 block">{counts.total_evaluations || 0}</span>
+        <div className="academic-card p-4 bg-white space-y-1">
+          <span className="text-[11px] text-slate-500 font-bold uppercase tracking-wider block">Total Questions Evaluated</span>
+          <span className="text-2xl font-bold text-slate-900 block">{counts.total_evaluations || 0}</span>
         </div>
-        <div className="bg-amber-100 border-2 border-slate-900 rounded-xl p-5 shadow-[4px_4px_0px_0px_rgba(15,23,42,1)]">
-          <span className="text-xs text-slate-800 font-extrabold uppercase block flex items-center gap-1.5">
-            <MessageSquare className="w-3.5 h-3.5 text-amber-900" /> Student Rechecks
+        <div className="academic-card p-4 bg-white space-y-1">
+          <span className="text-[11px] text-amber-700 font-bold uppercase tracking-wider block flex items-center gap-1.5">
+            <MessageSquare className="w-3.5 h-3.5 text-amber-600" /> Candidate Recheck Requests
           </span>
-          <span className="text-3xl font-black text-amber-900 mt-1 block">{counts.recheck_requests || 0}</span>
+          <span className="text-2xl font-bold text-amber-900 block">{counts.recheck_requests || 0}</span>
         </div>
-        <div className="bg-rose-100 border-2 border-slate-900 rounded-xl p-5 shadow-[4px_4px_0px_0px_rgba(15,23,42,1)]">
-          <span className="text-xs text-slate-800 font-extrabold uppercase block">Pending HITL Queue</span>
-          <span className="text-3xl font-black text-rose-800 mt-1 block">{counts.pending_reviews || 0}</span>
+        <div className="academic-card p-4 bg-white space-y-1">
+          <span className="text-[11px] text-rose-700 font-bold uppercase tracking-wider block">Pending Moderation Queue</span>
+          <span className="text-2xl font-bold text-rose-900 block">{counts.pending_reviews || 0}</span>
         </div>
-        <div className="bg-purple-100 border-2 border-slate-900 rounded-xl p-5 shadow-[4px_4px_0px_0px_rgba(15,23,42,1)]">
-          <span className="text-xs text-slate-800 font-extrabold uppercase block">Teacher Verified</span>
-          <span className="text-3xl font-black text-purple-900 mt-1 block">{counts.completed_reviews || 0}</span>
+        <div className="academic-card p-4 bg-white space-y-1">
+          <span className="text-[11px] text-emerald-700 font-bold uppercase tracking-wider block">Faculty Verified</span>
+          <span className="text-2xl font-bold text-emerald-900 block">{counts.completed_reviews || 0}</span>
         </div>
       </div>
 
       {loading ? (
-        <div className="neo-box p-12 text-center text-slate-700 font-bold flex items-center justify-center gap-2">
-          <Loader2 className="w-5 h-5 animate-spin text-purple-700" /> Loading HITL Review Queue...
+        <div className="academic-card p-12 text-center text-slate-500 text-xs font-medium flex items-center justify-center gap-2">
+          <Loader2 className="w-4 h-4 animate-spin text-blue-600" /> Loading faculty moderation queue...
         </div>
       ) : !item ? (
-        <div className="neo-box p-12 text-center space-y-4">
-          <CheckCircle2 className="w-12 h-12 text-emerald-600 mx-auto" />
-          <h3 className="text-xl font-black text-slate-900">HITL Review Queue Completed!</h3>
-          <p className="text-slate-600 text-sm max-w-md mx-auto font-medium">
-            All flagged questions and student recheck requests have been reviewed by teachers or passed high-confidence criteria.
+        <div className="academic-card p-12 text-center space-y-3 bg-white">
+          <CheckCircle2 className="w-8 h-8 text-emerald-600 mx-auto" />
+          <h3 className="text-base font-bold text-slate-900">Faculty Moderation Queue Completed</h3>
+          <p className="text-slate-500 text-xs max-w-md mx-auto">
+            All flagged questions and student recheck submissions have been moderated or confirmed with high confidence.
           </p>
         </div>
       ) : (
-        /* Split Screen HITL Review Interface */
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        /* Split Screen Review Interface */
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           
-          {/* Left Pane: Student Answer Extract */}
-          <div className="neo-box p-6 space-y-4">
-            <div className="flex items-center justify-between border-b-2 border-slate-900 pb-3">
-              <span className="text-xs font-black font-mono text-purple-900 bg-purple-200 border-2 border-slate-900 px-3 py-1 rounded-lg">
-                Roll No: {item.roll_no}
+          {/* Left Pane: Candidate Script Extract */}
+          <div className="academic-card p-5 bg-white space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <span className="academic-badge badge-slate font-mono font-bold">
+                Enrollment No: {item.roll_no}
               </span>
-              <span className="text-xs font-black px-3 py-1 bg-yellow-200 text-slate-900 border-2 border-slate-900 rounded-lg">
+              <span className="academic-badge badge-blue">
                 Question {item.question_id} (Max: {item.max_marks} Marks)
               </span>
             </div>
 
-            {/* Student Recheck Alert Box */}
+            {/* Candidate Recheck Alert Box */}
             {item.recheck_requested && (
-              <div className="bg-amber-100 border-2 border-slate-900 rounded-xl p-4 space-y-1 shadow-[3px_3px_0px_0px_rgba(15,23,42,1)]">
-                <span className="text-xs font-black text-amber-900 flex items-center gap-1.5 uppercase">
-                  <HelpCircle className="w-4 h-4" /> Student Requested Recheck:
+              <div className="academic-badge badge-amber w-full p-3 rounded-lg block space-y-1">
+                <span className="text-[11px] font-bold text-amber-900 flex items-center gap-1.5 uppercase tracking-wider">
+                  <HelpCircle className="w-3.5 h-3.5 text-amber-700" /> Candidate Requested Re-evaluation:
                 </span>
-                <p className="text-xs text-slate-900 font-bold leading-relaxed bg-white/80 p-2.5 rounded-lg border border-slate-900">
-                  "{item.recheck_comment || 'Student requested re-evaluation of this question.'}"
+                <p className="text-xs text-slate-800 font-medium bg-white p-2.5 rounded border border-amber-200">
+                  "{item.recheck_comment || 'Candidate requested verification of awarded marks.'}"
                 </p>
               </div>
             )}
 
             <div>
-              <h4 className="text-xs font-black uppercase text-slate-900 mb-2 flex items-center gap-2">
-                <FileText className="w-4 h-4 text-slate-900" /> Extracted Student OCR Text
+              <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-700 mb-2 flex items-center gap-1.5">
+                <FileText className="w-3.5 h-3.5 text-slate-500" /> Candidate Response (OCR Extract)
               </h4>
-              <div className="bg-slate-900 text-slate-100 rounded-xl p-4 font-mono text-xs leading-relaxed whitespace-pre-wrap max-h-96 overflow-y-auto border-2 border-slate-900">
-                {item.ocr_text_preview || 'No text extracted.'}
+              <div className="bg-slate-900 text-slate-100 rounded-lg p-4 font-mono text-xs leading-relaxed whitespace-pre-wrap max-h-96 overflow-y-auto">
+                {item.ocr_text_preview || 'No text content extracted.'}
               </div>
             </div>
           </div>
 
-          {/* Right Pane: AI Evaluation Reasoning & Overrides */}
-          <div className="neo-box p-6 space-y-6">
-            <div className="flex items-center justify-between border-b-2 border-slate-900 pb-3">
-              <h3 className="font-black text-slate-900 text-base flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-purple-700" /> AI Evaluation Breakdown
+          {/* Right Pane: AI Evaluation Logic & Faculty Action */}
+          <div className="academic-card p-5 bg-white space-y-5">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-blue-600" /> Automated Assessment Breakdown
               </h3>
-              <div className="text-right">
-                <span className="text-[10px] uppercase font-black text-slate-600 block">Confidence Score</span>
-                <span className={`text-xs font-black px-2 py-0.5 border-2 border-slate-900 rounded-lg text-slate-900 ${
-                  item.confidence_score >= 0.70 ? 'bg-emerald-200' : 'bg-rose-200'
+              <div>
+                <span className={`academic-badge text-[11px] ${
+                  item.confidence_score >= 0.70 ? 'badge-green' : 'badge-rose'
                 }`}>
-                  {Math.round(item.confidence_score * 100)}%
+                  Confidence: {Math.round(item.confidence_score * 100)}%
                 </span>
               </div>
             </div>
 
             {/* AI Reasoning */}
-            <div className="bg-yellow-50 border-2 border-slate-900 rounded-xl p-4 space-y-1 shadow-[2px_2px_0px_0px_rgba(15,23,42,1)]">
-              <label className="block text-[11px] font-black uppercase text-slate-900">AI Evaluation Logic</label>
-              <p className="text-xs text-slate-900 font-medium leading-relaxed">{item.ai_reasoning}</p>
+            <div className="bg-slate-50 border border-slate-200 rounded-lg p-3.5 space-y-1">
+              <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-600">AI Evaluation Logic</label>
+              <p className="text-xs text-slate-800 font-medium leading-relaxed">{item.ai_reasoning}</p>
             </div>
 
-            {/* Teacher Override Form */}
-            <div className="space-y-4 pt-2 border-t-2 border-slate-900">
+            {/* Faculty Decision Console */}
+            <div className="space-y-4 pt-2 border-t border-slate-100">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-black text-slate-900 mb-1">Final Score Overridden</label>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Final Score Overridden</label>
                   <div className="flex items-center gap-2">
                     <input
                       type="number"
@@ -171,48 +170,49 @@ export default function HitlDashboard({ activeExam, onComplete }) {
                       max={item.max_marks}
                       value={overrideScore}
                       onChange={(e) => setOverrideScore(e.target.value)}
-                      className="neo-input w-full font-black text-sm px-3 py-2"
+                      className="academic-input w-full font-bold text-sm px-3 py-1.5"
                     />
-                    <span className="text-xs text-slate-900 font-black">/ {item.max_marks}</span>
+                    <span className="text-xs text-slate-500 font-medium">/ {item.max_marks}</span>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-black text-slate-900 mb-1">Teacher Feedback Note</label>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Faculty Feedback / Audit Note</label>
                   <input
                     type="text"
                     value={feedback}
                     onChange={(e) => setFeedback(e.target.value)}
-                    placeholder="Optional feedback"
-                    className="neo-input w-full text-xs font-medium px-3 py-2"
+                    placeholder="Optional examiner note"
+                    className="academic-input w-full text-xs px-3 py-1.5"
                   />
                 </div>
               </div>
 
               {/* Action Buttons */}
-              <div className="flex items-center gap-3 pt-2">
+              <div className="flex items-center gap-2.5 pt-1">
                 <button
                   onClick={() => handleReview('APPROVED')}
                   disabled={submitting}
-                  className="flex-1 neo-button-primary py-2.5 flex items-center justify-center gap-2 text-xs cursor-pointer"
+                  className="flex-1 academic-button-primary py-2 flex items-center justify-center gap-1.5 text-xs font-semibold cursor-pointer"
                 >
-                  <CheckCircle2 className="w-4 h-4" /> Approve ({item.suggested_marks})
+                  <CheckCircle2 className="w-3.5 h-3.5" /> Approve ({item.suggested_marks})
                 </button>
 
                 <button
                   onClick={() => handleReview('MODIFIED')}
                   disabled={submitting}
-                  className="flex-1 neo-button-accent py-2.5 flex items-center justify-center gap-2 text-xs cursor-pointer"
+                  className="flex-1 academic-button-secondary py-2 flex items-center justify-center gap-1.5 text-xs font-semibold cursor-pointer"
                 >
-                  <Edit3 className="w-4 h-4" /> Override ({overrideScore})
+                  <Edit3 className="w-3.5 h-3.5 text-blue-600" /> Override ({overrideScore})
                 </button>
 
                 <button
                   onClick={loadQueueItem}
                   disabled={submitting}
-                  className="neo-button-yellow px-4 py-2.5 text-xs font-bold cursor-pointer"
+                  className="academic-button-secondary px-3 py-2 text-xs font-semibold cursor-pointer"
+                  title="Skip to next item"
                 >
-                  <SkipForward className="w-4 h-4" />
+                  <SkipForward className="w-3.5 h-3.5 text-slate-500" />
                 </button>
               </div>
             </div>

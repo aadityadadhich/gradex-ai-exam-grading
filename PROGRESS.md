@@ -1,8 +1,8 @@
 # 📊 Project Progress & Handoff Tracking
 
-> **Project:** AI-Powered Subjective Exam Grading System (Gradex AI)  
-> **Status:** New Updates Complete & Live — Student & Teacher Portals, Semantic Grading, Bulk Upload, HITL Rechecks  
-> **Last Updated:** 2026-08-16  
+> **Project:** Gradex AI Academic Exam Assessment Platform  
+> **Status:** All MCQ & Subjective Evaluation Fixes, OCR Pipeline, and PDF Grade Sheet Downloads Tested & Verified  
+> **Last Updated:** 2026-08-17  
 
 ---
 
@@ -11,38 +11,18 @@ This file maintains the exact state of implementation so that work can be resume
 
 ---
 
-## 🏁 New Updates Implementation Matrix (from `new-updates.txt`)
+## 🏁 Solved Issues Matrix
 
-- [x] **1. Removed Mistral API (Gemini API Only)**: Removed Mistral API usages in `llm_service.py` and configured multi-model Gemini fallback (`gemini-2.5-flash`, `gemini-flash-latest`, `gemini-1.5-flash`).
-- [x] **2. Removed Double-Blind / Anonymization**: Removed anonymization overhead; directly linked Student Roll Numbers (`Student_1` ... `Student_37`) and Teacher Employee IDs (`Teacher_1`, `Teacher_2`).
-- [x] **3. Role-Based Login (Student & Teacher)**:
-  - Created `Login.jsx` component with Student & Teacher role toggles.
-  - Seeded 37 Student accounts (`Student_1` to `Student_37` / `password123`) and 2 Teacher accounts (`Teacher_1`, `Teacher_2` / `teacher123`).
-  - Generated and saved `credentials.txt` in workspace root.
-- [x] **4. Student Portal (`StudentDashboard.jsx`)**:
-  - Displays only the student's evaluated papers and marks.
-  - Question-by-question breakdown with **side-by-side view** (Original student OCR text on left, AI Reasoning + Reference Solution + Teacher Feedback on right).
-  - **Raise Recheck Request**: Interactive modal allowing students to flag questions, submit explanation comments, and track recheck status.
-- [x] **5. Teacher Portal & Exam Management**:
-  - Create new exams, delete existing exams with confirmation (`DELETE /exam/{id}`).
-  - Bulk upload student PDFs with automatic Roll Number detection from filenames (e.g. `Student_1.pdf` &rarr; `Student_1`).
-  - Run AI pipeline with real-time progress bar.
-  - HITL Review queue prioritizing Student Recheck Requests with student comments highlighted.
-- [x] **6. Simplified Semantic Evaluation Process**:
-  - Replaced rigid keyword matching with Gemini semantic evaluation + tolerance threshold (70% threshold).
-  - Accurate MCQ matching (Options A/B/C/D).
-- [x] **7. Active Servers**:
-  - React Frontend (Neubrutalism UI): `http://localhost:3000` (Task ID `task-538`)
-  - FastAPI Backend API: `http://127.0.0.1:8000` (Task ID `task-536`)
-
----
-
-## 📝 Activity Log
-
-### [2026-08-16] Implemented all requirements from `new-updates.txt`
-- Created `auth.py` and `student.py` routes.
-- Built `Login.jsx` and `StudentDashboard.jsx`.
-- Added bulk PDF upload (`POST /exam/{id}/bulk-submit-pdfs`).
-- Added exam deletion endpoint (`DELETE /exam/{id}`).
-- Created `credentials.txt` containing login credentials for all 37 test students and teachers.
-- Verified live server operations on both `localhost:3000` and `localhost:8000`.
+- [x] **1. Installed & Verified EasyOCR Engine**:
+  - Scanned image-based PDFs from test data (`Student_1.pdf` through `Student_37.pdf`) had 0 digital text layer; installed EasyOCR with PyTorch to extract handwriting across all pages.
+- [x] **2. Fixed Question-by-Question MCQ Extraction & Grading**:
+  - Built `parse_all_student_mcqs` in `evaluation_service.py` to extract option choices (A/B/C/D) from sequential lines, handling multi-line splits (`Q.2 \n C`), OCR digit variations, and comparing against the official answer key.
+- [x] **3. Fixed Grade Report PDF Downloads for Faculty & Students**:
+  - Corrected case-sensitive database lookups in `outputs.py` using `models.StudentSubmission.roll_no.ilike(clean_roll)`.
+  - Verified `GET /exam/{id}/download-pdf/Student_1` and `GET /exam/{id}/download-pdf/Student_17` return complete PDFs with HTTP 200 OK.
+- [x] **4. End-to-End AI Pipeline Tested**:
+  - Tested end-to-end evaluation on `Student_1.pdf` matching all 20 MCQs and 15 Short Answer questions.
+- [x] **5. Active Background Servers**:
+  - React Frontend: `http://localhost:3000` (Task ID `task-538`)
+  - FastAPI Backend: `http://127.0.0.1:8000` (Task ID `task-971`)
+- [x] **6. GitHub Repository**: Synced to `https://github.com/aadityadadhich/gradex-ai-exam-grading.git`.
