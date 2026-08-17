@@ -1,7 +1,6 @@
 import logging
-
 import sqlalchemy
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from app.config import settings
@@ -41,7 +40,21 @@ except Exception as e:
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = sqlalchemy.orm.declarative_base()
 
-
+def apply_migrations():
+    """Apply schema migrations safely for existing SQLite / Postgres tables"""
+    cols_to_add = [
+        ("recheck_requested", "BOOLEAN DEFAULT 0"),
+        ("recheck_comment", "TEXT"),
+        ("recheck_status", "VARCHAR(50)"),
+        ("recheck_created_at", "TIMESTAMP")
+    ]
+    with engine.connect() as conn:
+        for col_name, col_type in cols_to_add:
+            try:
+                conn.execute(text(f"ALTER TABLE evaluations ADD COLUMN {col_name} {col_type};"))
+                conn.commit()
+            except Exception:
+                pass  # Column already exists
 
 def get_db():
     db = SessionLocal()
